@@ -1,0 +1,43 @@
+name: Add adaptive practice
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-adaptive-practice.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add adaptive practice jump
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('.reviewjump{width:100%;min-height:48px;margin-top:8px;border-style:dashed;background:#fff7cf}', '.reviewtools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.reviewjump{width:100%;min-height:48px;border-style:dashed;background:#fff7cf}')
+          s=s.replace('<button id="weakNext" class="reviewjump">要復習を練習</button><main', '<div class="reviewtools"><button id="weakNext" class="reviewjump">要復習を練習</button><button id="adaptive" class="reviewjump">おすすめ練習</button></div><main')
+          marker="$('weakNext').onclick=()=>{let weak=[...weakSet].filter(k=>k.startsWith(c+':')).map(k=>+k.split(':')[1]).filter(n=>Number.isInteger(n)&&n>=0&&n<D[c].length).sort((a,b)=>a-b);if(!weak.length){showFeedback([textNode('div','このカテゴリに要復習はありません。')]);return}let next=weak.find(n=>n>i);i=next===undefined?weak[0]:next;$('scene').value=i;render()};"
+          add=marker+"$('adaptive').onclick=()=>{let weak=[...weakSet].filter(k=>k.startsWith(c+':')).map(k=>+k.split(':')[1]).filter(n=>Number.isInteger(n)&&n>=0&&n<D[c].length);let pool=weak.length?weak:D[c].map((_,n)=>n);pool.sort((a,b)=>{let A=stats[c+':'+a]||{attempts:0,best:0,last:0},B=stats[c+':'+b]||{attempts:0,best:0,last:0};return A.attempts-B.attempts||A.best-B.best||A.last-B.last});i=pool[0]??0;$('scene').value=i;render();showFeedback([textNode('div',weak.length?'要復習の中から優先度が高いフレーズを選びました。':'練習回数が少ないフレーズを選びました。')])};"
+          if "$('adaptive').onclick" not in s:
+              if marker not in s: raise SystemExit('weak review marker missing')
+              s=s.replace(marker,add,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify adaptive practice
+        run: |
+          grep -q 'id="adaptive"' index.html
+          grep -q 'おすすめ練習' index.html
+          grep -q "A.attempts-B.attempts" index.html
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Add adaptive practice recommendation'
+          git push
