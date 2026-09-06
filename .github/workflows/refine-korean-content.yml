@@ -1,0 +1,44 @@
+name: Refine Korean content
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refine-korean-content.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine selected phrases
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('lessons.js')
+          s=p.read_text(encoding='utf-8')
+          repl={
+            "['お礼','감사합니다.','カムサハムニダ','→ ↘','ありがとうございます。','감사합니다.','천만에요.']":"['お礼','감사합니다.','カムサハムニダ','→ ↘','ありがとうございます。','감사합니다.','아니에요.']",
+            "['依頼','자료를 보내 주세요.','チャリョル ポネ ジュセヨ','→ → ↘','資料を送ってください。'":"['依頼','자료를 보내 주세요.','チャリョルル ポネ ジュセヨ','→ → ↘','資料を送ってください。'",
+            "['会議','회의를 시작하겠습니다.','フェイル シジャカゲッスムニダ','→ → ↘','会議を始めます。'":"['会議','회의를 시작하겠습니다.','フェイルル シジャカゲッスムニダ','→ → ↘','会議を始めます。'"
+          }
+          for old,new in repl.items():
+            if old not in s: raise SystemExit('expected phrase not found: '+old[:40])
+            s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify refinements
+        run: |
+          grep -q "'감사합니다.','아니에요.'" lessons.js
+          grep -q "자료를 보내 주세요.','チャリョルル ポネ ジュセヨ'" lessons.js
+          grep -q "회의를 시작하겠습니다.','フェイルル シジャカゲッスムニダ'" lessons.js
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lessons.js
+          git commit -m 'Refine Korean replies and particle pronunciation guides'
+          git push
