@@ -1,0 +1,64 @@
+name: Refine Ver.2.2 UI and pronunciation
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refine-ver22-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply refinements
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # Home copy: remove redundant visual instruction.
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='練習したい場面を選んでください。大きなボタンを1回押すだけで始まります。'
+          new='練習したい場面を選んでください。'
+          if old in s:
+              s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
+          # Keep the pronunciation-guide conventions refined earlier in lessons.js.
+          p=Path('lessons-extra.js')
+          s=p.read_text(encoding='utf-8')
+          repl={
+            "'탑승구가 어디예요?','タプスングガ オディエヨ','→ → ↗'":"'탑승구가 어디예요?','タプッスングガ オディエヨ','→ → ↗'",
+            "'비행기가 지연됐어요?','ピヘンギガ チヨンドェッソヨ','→ → ↗'":"'비행기가 지연됐어요?','ピヘンギガ チヨンドェッソヨ','→ ↗ ↗'",
+            "'처음 뵙겠습니다.','チョウム プェプケッスムニダ','→ ↘'":"'처음 뵙겠습니다.','チョウム ペプケッスムニダ','→ ↘'",
+            "'확인해 보겠습니다.','ファギネ ポゲッスムニダ','→ ↘'":"'확인해 보겠습니다.','ファギネ ボゲッスムニダ','→ → ↘'",
+            "'회의를 시작하겠습니다.','フェイルル シジャカゲッスムニダ','→ ↘'":"'회의를 시작하겠습니다.','フェイルル シジャカゲッスムニダ','→ → ↘'",
+            "'일정이 변경됐어요.','イルチョンイ ピョンギョンドェッソヨ','→ ↘'":"'일정이 변경됐어요.','イルッチョンイ ピョンギョンドェッソヨ','→ → ↘'",
+            "'작업이 조금 늦어지고 있어요.','チャゴビ チョグム ヌジョジゴ イッソヨ','→ → ↘'":"'작업이 조금 늦어지고 있어요.','チャゴビ チョグム ヌジョジゴ イッソヨ','→ → → ↘'",
+            "'몇 번 출구로 나가요?','ミョッ ポン チュルグロ ナガヨ','→ → ↗'":"'몇 번 출구로 나가요?','ミョッポン チュルグロ ナガヨ','→ → ↗'",
+            "'땅콩이 들어가요?','タンコンイ トゥロガヨ','→ ↗'":"'땅콩이 들어가요?','ッタンコンイ トゥロガヨ','→ ↗'",
+            "'경찰을 불러 주세요.','キョンチャルル プルロ ジュセヨ','→ ↘'":"'경찰을 불러 주세요.','キョンチャルル プルロ ジュセヨ','→ → ↘'"
+          }
+          for old,new in repl.items():
+              if old in s:
+                  s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q '練習したい場面を選んでください。' index.html
+          ! grep -q '大きなボタンを1回押すだけで始まります。' index.html
+          grep -q "チョウム ペプケッスムニダ" lessons-extra.js
+          grep -q "ファギネ ボゲッスムニダ" lessons-extra.js
+          grep -q "イルッチョンイ" lessons-extra.js
+      - name: Commit refinements
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html lessons-extra.js
+          git commit -m 'Refine Ver.2.2 home copy and pronunciation guides'
+          git push
