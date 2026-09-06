@@ -1,0 +1,61 @@
+name: Eye friendly theme and visual prosody v2.7
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/eye-friendly-prosody-v27.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch UI and pronunciation rendering
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          s=s.replace('Ver.2.6</span>','Ver.2.7</span>')
+          s=s.replace('<div>Ver.2.6</div><div>Personal Korean Learning Project</div>','<div>Ver.2.7</div><div>Personal Korean Learning Project</div>')
+          s=s.replace('<div>Ver.2.6　基本レッスンの実音寄りカタカナ表記を監査・改善</div>','<div>Ver.2.7　目に優しい配色へ変更／カタカナ自体の大きさ・位置でも抑揚を表示</div><div>Ver.2.6　基本レッスンの実音寄りカタカナ表記を監査・改善</div>')
+
+          eye_css='''\n/* ===== Eye-friendly warm theme ===== */\n:root{background:#f3efe6;color:#302a24}\nbody{background:#f3efe6;color:#302a24}\n.card,.category,select,textarea,.app-footer details{background:#fbf7ef!important}\n.card{border-color:#b9aa98;box-shadow:0 3px 0 #b9aa98}\n.category{border-color:#a99884;box-shadow:0 3px #a99884}\n.category.daily{background:#fff9e8!important}.category.travel{background:#eef4f2!important}.category.business{background:#f2eef5!important}\nbutton,select,textarea{border-color:#8f8375;color:#2f2923}\n.tabs .on,.nav .primary{background:#65584d!important;color:#fffaf3!important}\n.listen{background:#5f7891!important;color:#fff!important}.slow{background:#e7edf1!important}.speak{background:#9a5f69!important;color:#fff!important}\n.homeReview button,.tag,.writeanswer{background:#f4e7bd!important}\n.feedback{background:#ece8e1}.bubble{background:#e8efee}.bubble.b{background:#f3e8df}\n.ko{color:#221f1b}.ja{color:#4b433b}.pron{color:#26211d}.tone{color:#7b5232}\n.pron .p{display:inline-block;transition:transform .15s ease,font-size .15s ease}\n.pron .p.prosody-high{transform:translateY(-9px) scale(1.16);font-weight:950}\n.pron .p.prosody-low{transform:translateY(7px) scale(.90);font-weight:800}\n.pron .p.prosody-rise{transform:translateY(-5px) scale(1.10);font-weight:950}\n.pron .p.prosody-fall{transform:translateY(5px) scale(.94);font-weight:850}\n.pron .p.prosody-flat{transform:translateY(0) scale(1)}\nbody.big .pron .p{font-size:35px}\nbody.big .pron .p.prosody-high{font-size:39px}\nbody.big .pron .p.prosody-low{font-size:31px}\n@media(max-width:520px){body.big .pron .p{font-size:31px}body.big .pron .p.prosody-high{font-size:35px}body.big .pron .p.prosody-low{font-size:28px}}\n'''
+          s=s.replace('</style></head>',eye_css+'</style></head>')
+
+          old="function renderPron(text,tone){let parts=String(text||'').split(' '),arrows=String(tone||'').split(/\\s+/);$('pron').replaceChildren();parts.forEach((p,n)=>{let s=document.createElement('span');s.textContent=p;s.className='p '+(['↗','↴'].includes(arrows[n])?'high':['↘','↵'].includes(arrows[n])?'low':'');$('pron').appendChild(s)});$('tone').textContent=tone||'';$('tone').setAttribute('aria-label','抑揚 '+(tone||''))}"
+          new="function renderPron(text,tone){let parts=String(text||'').split(' '),arrows=String(tone||'').split(/\\s+/);$('pron').replaceChildren();parts.forEach((p,n)=>{let a=arrows[n]||'→',sp=document.createElement('span');sp.textContent=p;let cls='prosody-flat';if(a==='↴')cls='prosody-high';else if(a==='↵')cls='prosody-low';else if(a==='↗')cls='prosody-rise';else if(a==='↘')cls='prosody-fall';sp.className='p '+cls;$('pron').appendChild(sp)});$('tone').textContent=tone||'';$('tone').setAttribute('aria-label','抑揚 '+(tone||''))}"
+          if old not in s:
+              raise SystemExit('renderPron block not found')
+          s=s.replace(old,new)
+
+          s=s.replace('lessons.js?v=2601','lessons.js?v=2701')
+          s=s.replace('lessons-extra.js?v=2601','lessons-extra.js?v=2701')
+          s=s.replace("sw.js?v=2601","sw.js?v=2701")
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          t=t.replace("const CACHE='kor-practice-v7';","const CACHE='kor-practice-v8';")
+          t=t.replace('./lessons.js?v=2601','./lessons.js?v=2701')
+          t=t.replace('./lessons-extra.js?v=2601','./lessons-extra.js?v=2701')
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.2.7' index.html
+          grep -q 'Eye-friendly warm theme' index.html
+          grep -q 'prosody-high' index.html
+          grep -q 'prosody-low' index.html
+          grep -q 'prosody-rise' index.html
+          grep -q 'prosody-fall' index.html
+          grep -q 'kor-practice-v8' sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Add eye-friendly theme and visual prosody for Ver.2.7'
+          git push
