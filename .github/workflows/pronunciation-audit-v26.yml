@@ -1,0 +1,62 @@
+name: Pronunciation audit v2.6
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pronunciation-audit-v26.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine core pronunciation guides
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('lessons.js')
+          s=p.read_text(encoding='utf-8')
+          repl={
+            "'アン メプケ ヘ ジュセヨ'":"'アン メプッケ ヘ ジュセヨ'",
+            "'ナジュンエ タシ チョナハルケヨ'":"'ナジュンエ タシ チョナハルッケヨ'",
+            "'チャムカンマン キダリョ ジュセヨ'":"'チャムッカンマン キダリョ ジュセヨ'",
+            "'サジン チゴド デヨ'":"'サジン ッチゴド デヨ'",
+            "'チェクイナゴ シポヨ'":"'チェクイナゴ シポヨ'",
+            "'スゴヌル ト ジュセヨ'":"'スゴヌル ト ジュセヨ'"
+          }
+          for a,b in repl.items(): s=s.replace(a,b)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Ver.2.5</span>','Ver.2.6</span>')
+          s=s.replace('<div>Ver.2.5</div><div>Personal Korean Learning Project</div>','<div>Ver.2.6</div><div>Personal Korean Learning Project</div>')
+          s=s.replace('<div>Ver.2.5　ホーム画面を整理／東海パンMAPと同系統のフッターを追加</div>','<div>Ver.2.6　基本レッスンの実音寄りカタカナ表記を監査・改善</div><div>Ver.2.5　ホーム画面を整理／東海パンMAPと同系統のフッターを追加</div>')
+          s=s.replace('lessons.js?v=2502','lessons.js?v=2601')
+          s=s.replace('lessons-extra.js?v=2502','lessons-extra.js?v=2601')
+          s=s.replace("sw.js?v=2502","sw.js?v=2601")
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          t=t.replace("const CACHE='kor-practice-v6';","const CACHE='kor-practice-v7';")
+          t=t.replace("./lessons.js?v=2502","./lessons.js?v=2601")
+          t=t.replace("./lessons-extra.js?v=2502","./lessons-extra.js?v=2601")
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'メプッケ' lessons.js
+          grep -q 'ハルッケヨ' lessons.js
+          grep -q 'チャムッカンマン' lessons.js
+          grep -q 'ッチゴド' lessons.js
+          grep -q 'Ver.2.6' index.html
+          grep -q 'kor-practice-v7' sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lessons.js index.html sw.js
+          git commit -m 'Refine core pronunciation guides for Ver.2.6'
+          git push
