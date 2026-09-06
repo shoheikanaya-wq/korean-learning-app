@@ -1,0 +1,51 @@
+name: Add footer and update history v2.5
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-footer-v25.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update home and footer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          s=s.replace('<span class="version">Ver.2.4</span>','<span class="version">Ver.2.5</span>')
+          s=s.replace('<div class="homelead">練習したい場面を選んでください。</div>','')
+
+          css='.appfooter{margin:18px 0 6px;padding:14px 12px;border-top:2px solid #bbb;text-align:center;color:#555;font-size:13px;line-height:1.6}.appfooter .maker{font-weight:900;color:#333}.appfooter details{margin:8px auto 0;max-width:520px;text-align:left;background:#fff;border:1px solid #ccc;border-radius:12px;padding:8px 10px}.appfooter summary{cursor:pointer;font-weight:900;text-align:center}.appfooter .history{margin-top:7px}.appfooter .history div{padding:5px 0;border-top:1px dashed #ddd}.appfooter .history div:first-child{border-top:0}.appfooter .updated{margin-top:7px;font-size:12px}'
+          marker='@media(max-width:520px)'
+          if css not in s:
+              s=s.replace(marker,css+marker)
+
+          footer='''<footer class="appfooter"><div class="maker">製作者：SK</div><details><summary>更新履歴</summary><div class="history"><div><b>Ver.2.5</b>　ホーム案内文を整理／製作者・更新履歴を追加</div><div><b>Ver.2.4</b>　カタカナ発音・抑揚表示を改善／文字サイズを大きめ固定</div><div><b>Ver.2.2</b>　2人会話で「アプリ同士・自分がA・自分がB」を選択可能に</div><div><b>Ver.2.1</b>　トラベル韓国語・ビジネス韓国語を拡充</div></div></details><div class="updated">最終更新：2026-09-07</div></footer>'''
+          script_marker='<script src="./lessons.js"></script>'
+          if footer not in s:
+              s=s.replace(script_marker,footer+script_marker)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.2.5' index.html
+          ! grep -q '練習したい場面を選んでください。' index.html
+          grep -q '製作者：SK' index.html
+          grep -q '更新履歴' index.html
+          grep -q '最終更新：2026-09-07' index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Add creator footer and update history for Ver.2.5'
+          git push
