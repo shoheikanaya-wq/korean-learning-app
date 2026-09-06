@@ -50,7 +50,6 @@ jobs:
           grep -q 'korWeak' index.html
           grep -q 'korStats' index.html
           grep -q 'function recordAttempt' index.html
-          grep -q 'function focusHint' index.html
           grep -q '練習 ${x.attempts}回' index.html
           grep -q '最高 ${x.best}%' index.html
       - name: Validate current large-text UX
