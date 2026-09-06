@@ -1,0 +1,43 @@
+name: Improve chunk visual prosody v2.8
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/prosody-chunks-v28.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Improve visual prosody readability
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Ver.2.7</span>','Ver.2.8</span>')
+          s=s.replace('<div>Ver.2.7</div><div>Personal Korean Learning Project</div>','<div>Ver.2.8</div><div>Personal Korean Learning Project</div>')
+          s=s.replace('<div>Ver.2.7　目に優しい配色へ変更／カタカナ自体の大きさ・位置でも抑揚を表示</div>','<div>Ver.2.8　発音カタカナを音のかたまり単位で上下・大小表示し、矢印との対応を強化</div><div>Ver.2.7　目に優しい配色へ変更／カタカナ自体の大きさ・位置でも抑揚を表示</div>')
+          extra='''\n/* Prosody: arrow and katakana move as one readable chunk */\n.pronwrap{padding:14px 8px 8px;border-radius:16px;background:#f8f2e8}\n.pron{gap:10px 8px;min-height:62px;align-items:center}\n.pron .p{padding:2px 1px;line-height:1.25}\n.tone{margin-top:5px;letter-spacing:7px;font-size:28px;line-height:1.2}\n.prosody-legend{font-size:12px;color:#75695e;text-align:center;margin-top:4px;font-weight:750}\n@media(max-width:520px){.pronwrap{padding:13px 5px 7px}.pron{gap:9px 6px;min-height:58px}.tone{font-size:25px;letter-spacing:5px}}\n'''
+          s=s.replace('</style></head>',extra+'</style></head>')
+          s=s.replace('<div id="tone" class="tone"></div></div>','<div id="tone" class="tone"></div><div class="prosody-legend">文字の上下・大きさ ＋ 矢印で声の上がり下がりを表示</div></div>')
+          s=s.replace('lessons.js?v=2701','lessons.js?v=2801').replace('lessons-extra.js?v=2701','lessons-extra.js?v=2801').replace("sw.js?v=2701","sw.js?v=2801")
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js');t=sw.read_text(encoding='utf-8')
+          t=t.replace("const CACHE='kor-practice-v8';","const CACHE='kor-practice-v9';").replace('./lessons.js?v=2701','./lessons.js?v=2801').replace('./lessons-extra.js?v=2701','./lessons-extra.js?v=2801')
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.2.8' index.html
+          grep -q 'prosody-legend' index.html
+          grep -q 'kor-practice-v9' sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Improve chunk-level visual prosody for Ver.2.8'
+          git push
