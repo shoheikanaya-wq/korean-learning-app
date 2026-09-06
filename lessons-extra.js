@@ -60,9 +60,6 @@
 
   document.addEventListener('DOMContentLoaded',()=>{
     const q=id=>document.getElementById(id);
-    const version=document.querySelector('.version');
-    if(version)version.textContent='Ver.2.2';
-
     const retry=q('retry');
     if(retry)retry.remove();
     const actions=document.querySelector('.actions');
