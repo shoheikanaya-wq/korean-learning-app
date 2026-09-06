@@ -39,6 +39,19 @@ jobs:
           grep -q '聞き取り一致度' index.html
           grep -q '書く練習' index.html
           grep -q 'ミニ会話' index.html
+      - name: Validate adaptive learning features
+        run: |
+          grep -q 'id="weakNext"' index.html
+          grep -q '要復習を練習' index.html
+          grep -q 'id="adaptive"' index.html
+          grep -q 'おすすめ練習' index.html
+          grep -q 'korWeak' index.html
+          grep -q 'korStats' index.html
+          grep -q 'function recordAttempt' index.html
+          grep -q 'function focusHint' index.html
+          grep -q '練習 ${x.attempts}回' index.html
+          grep -q '最高 ${x.best}%' index.html
+          grep -q 'お手本の区切り' index.html
       - name: Validate lesson library structure
         run: |
           node - <<'NODE'
@@ -61,8 +74,11 @@ jobs:
               total++;
             }
           }
-          if(total<100) throw new Error(`Expected at least 100 lessons, found ${total}`);
-          console.log(`Validated ${total} lessons`);
+          if(total!==100) throw new Error(`Expected exactly 100 lessons, found ${total}`);
+          if(D.daily.length!==34||D.travel.length!==33||D.business.length!==33){
+            throw new Error(`Unexpected category counts: daily=${D.daily.length}, travel=${D.travel.length}, business=${D.business.length}`);
+          }
+          console.log(`Validated ${total} lessons: 34 daily / 33 travel / 33 business`);
           NODE
       - name: Guard unsafe transcript rendering
         run: |
