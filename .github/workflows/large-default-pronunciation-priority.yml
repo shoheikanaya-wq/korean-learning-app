@@ -1,0 +1,60 @@
+name: Large default and pronunciation priority
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/large-default-pronunciation-priority.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply UI refinement
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          # Version bump for visible confirmation.
+          s=s.replace('Ver.2.2','Ver.2.3')
+
+          # Remove font-size toggle from header; large size is now permanent.
+          s=s.replace('<button id="mode" class="mode">文字 大きめ</button>','')
+          s=s.replace('<body>','<body class="big">',1)
+
+          # Remove any mode-toggle/localStorage code safely when present.
+          candidates=[
+            "$('mode').onclick=()=>{document.body.classList.toggle('big');localStorage.setItem('korBig',document.body.classList.contains('big')?'1':'0');$('mode').textContent=document.body.classList.contains('big')?'文字 標準':'文字 大きめ'};",
+            "if(localStorage.getItem('korBig')==='1'){document.body.classList.add('big');$('mode').textContent='文字 標準'}",
+            "if(localStorage.getItem('korBig')==='1')document.body.classList.add('big');"
+          ]
+          for x in candidates:
+              s=s.replace(x,'')
+
+          # Ensure pronunciation/intontation are visually prominent in permanent large mode.
+          s=s.replace('body.big .pron .p{font-size:32px}', 'body.big .pron .p{font-size:34px}',1)
+          s=s.replace('.tone{text-align:center;font-size:24px;', '.tone{text-align:center;font-size:26px;',1)
+          s=s.replace('body.big .ja{font-size:25px}', 'body.big .ja{font-size:24px}',1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.2.3' index.html
+          grep -q '<body class="big">' index.html
+          ! grep -q 'id="mode"' index.html
+          grep -q 'font-size:34px' index.html
+          grep -q '.tone{text-align:center;font-size:26px' index.html
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Make large text permanent and emphasize pronunciation guides'
+          git push
