@@ -1,13 +1,35 @@
-const CACHE='kor-practice-v4';
-const SHELL=['./','./index.html','./lessons.js','./manifest.webmanifest','./pwa-check.html'];
+const CACHE='kor-practice-v5';
+const SHELL=['./','./index.html','./lessons.js','./lessons-extra.js','./manifest.webmanifest','./pwa-check.html'];
 
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache=>cache.addAll(SHELL))
+      .then(()=>self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate',event=>{
-  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+      .then(()=>self.clients.claim())
+  );
 });
+
+async function networkFirst(request){
+  try{
+    const response=await fetch(request,{cache:'no-store'});
+    if(response&&response.ok){
+      const copy=response.clone();
+      const cache=await caches.open(CACHE);
+      await cache.put(request,copy);
+    }
+    return response;
+  }catch(err){
+    return (await caches.match(request)) || (request.mode==='navigate' ? await caches.match('./index.html') : Response.error());
+  }
+}
 
 self.addEventListener('fetch',event=>{
   const request=event.request;
@@ -15,21 +37,13 @@ self.addEventListener('fetch',event=>{
   const url=new URL(request.url);
   if(url.origin!==self.location.origin) return;
 
-  if(request.mode==='navigate'){
-    event.respondWith(
-      fetch(request).then(response=>{
-        if(response&&response.ok){
-          const copy=response.clone();
-          caches.open(CACHE).then(cache=>cache.put(request,copy));
-        }
-        return response;
-      }).catch(async()=>{
-        return (await caches.match(request)) || (await caches.match('./index.html'));
-      })
-    );
+  // HTML/JSはオンライン時に必ず最新版を優先。オフライン時だけキャッシュを使う。
+  if(request.mode==='navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js')){
+    event.respondWith(networkFirst(request));
     return;
   }
 
+  // その他はキャッシュ優先で通信量を抑える。
   event.respondWith(
     caches.match(request).then(cached=>cached||fetch(request).then(response=>{
       if(response&&response.ok){
