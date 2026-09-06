@@ -1,0 +1,57 @@
+name: Match Tokai Pan footer and refresh PWA
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/footer-and-pwa-refresh-v251.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch footer and versioned assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old='<footer class="appfooter"><div class="maker">製作者：SK</div><details><summary>更新履歴</summary><div class="history"><div><b>Ver.2.5</b>　ホーム案内文を整理／製作者・更新履歴を追加</div><div><b>Ver.2.4</b>　カタカナ発音・抑揚表示を改善／文字サイズを大きめ固定</div><div><b>Ver.2.2</b>　2人会話で「アプリ同士・自分がA・自分がB」を選択可能に</div><div><b>Ver.2.1</b>　トラベル韓国語・ビジネス韓国語を拡充</div></div></details><div class="updated">最終更新：2026-09-07</div></footer>'
+          new='''<footer id="appFooter" class="app-footer"><div>韓国語 実践トレーニング</div><div>Ver.2.5</div><div>Personal Korean Learning Project</div><div>Created & Managed by S.K.</div><div>© 2026 S.K. All Rights Reserved.</div><details class="version-history"><summary>更新履歴を見る</summary><div>Ver.2.5　ホーム画面を整理／東海パンMAPと同系統のフッターを追加</div><div>Ver.2.4　カタカナ発音・抑揚表示を改善／文字サイズを大きめ固定</div><div>Ver.2.2　2人会話で「アプリ同士・自分がA・自分がB」を選択可能に</div><div>Ver.2.1　トラベル韓国語・ビジネス韓国語を拡充</div></details><div class="footer-note">日常・旅行・仕事で使える韓国語学習を目的とした個人制作アプリ</div></footer>'''
+          if old not in s:
+              raise SystemExit('current footer block not found')
+          s=s.replace(old,new)
+
+          css='.app-footer{margin-top:40px;padding:24px 16px;text-align:center;border-top:1px solid #ddd0bf;color:#6f655b;font-size:12px;line-height:1.8}.app-footer>div:first-child{font-size:15px;font-weight:bold;color:#333}.version-history{margin-top:8px}.version-history summary{cursor:pointer;font-weight:800}.version-history div{margin-top:4px}.footer-note{margin-top:8px;font-size:11px;color:#888}@media(max-width:600px){.app-footer{margin-top:12px;padding:10px 6px;font-size:10px}.footer-note{font-size:9px}}'
+          s=s.replace('@media(max-width:520px){',css+'@media(max-width:520px){',1)
+
+          s=s.replace('<script src="./lessons.js"></script><script src="./lessons-extra.js"></script>','<script src="./lessons.js?v=2502"></script><script src="./lessons-extra.js?v=2502"></script>')
+          s=s.replace("navigator.serviceWorker.register('./sw.js')","navigator.serviceWorker.register('./sw.js?v=2502',{updateViaCache:'none'})")
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          t=t.replace("const CACHE='kor-practice-v5';","const CACHE='kor-practice-v6';")
+          t=t.replace("const SHELL=['./','./index.html','./lessons.js','./lessons-extra.js','./manifest.webmanifest','./pwa-check.html'];","const SHELL=['./','./index.html','./lessons.js?v=2502','./lessons-extra.js?v=2502','./manifest.webmanifest','./pwa-check.html'];")
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Created & Managed by S.K.' index.html
+          grep -q '© 2026 S.K. All Rights Reserved.' index.html
+          grep -q '更新履歴を見る' index.html
+          grep -q 'lessons-extra.js?v=2502' index.html
+          grep -q "sw.js?v=2502" index.html
+          grep -q "kor-practice-v6" sw.js
+          ! grep -q '製作者：SK' index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Match Tokai Pan footer and force PWA refresh'
+          git push
