@@ -1,0 +1,38 @@
+name: Remove stale version overwrite
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-stale-version-overwrite.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove stale runtime version overwrite
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('lessons-extra.js')
+          s=p.read_text(encoding='utf-8')
+          old="    const version=document.querySelector('.version');\n    if(version)version.textContent='Ver.2.2';\n\n"
+          if old not in s:
+              raise SystemExit('stale Ver.2.2 overwrite not found')
+          s=s.replace(old,'')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          ! grep -q "version.textContent='Ver.2.2'" lessons-extra.js
+          grep -q 'Ver.2.4' index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lessons-extra.js
+          git commit -m 'Remove stale Ver.2.2 runtime override'
+          git push
