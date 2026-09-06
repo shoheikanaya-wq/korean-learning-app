@@ -17,6 +17,7 @@ jobs:
       - name: Validate required files
         run: |
           test -f index.html
+          test -f lessons.js
           test -f manifest.webmanifest
           test -f sw.js
           test -f pwa-check.html
@@ -24,6 +25,8 @@ jobs:
         run: |
           grep -q 'rel="manifest"' index.html
           grep -q 'serviceWorker' index.html
+          grep -q '<script src="./lessons.js"></script>' index.html
+          grep -q 'const D=window.LESSONS' index.html
           grep -q '"display":"standalone"' manifest.webmanifest
           grep -q '"scope":"./"' manifest.webmanifest
       - name: Validate learning pillars
@@ -36,6 +39,31 @@ jobs:
           grep -q '聞き取り一致度' index.html
           grep -q '書く練習' index.html
           grep -q 'ミニ会話' index.html
+      - name: Validate lesson library structure
+        run: |
+          node - <<'NODE'
+          global.window={};
+          require('./lessons.js');
+          const D=window.LESSONS;
+          const cats=['daily','travel','business'];
+          if(!D) throw new Error('window.LESSONS is missing');
+          let total=0;
+          const seen=new Set();
+          for(const cat of cats){
+            if(!Array.isArray(D[cat])) throw new Error(`Missing category: ${cat}`);
+            if(D[cat].length<30) throw new Error(`${cat} has too few lessons: ${D[cat].length}`);
+            for(const row of D[cat]){
+              if(!Array.isArray(row)||row.length!==7) throw new Error(`Invalid row in ${cat}`);
+              if(row.some(v=>typeof v!=='string'||!v.trim())) throw new Error(`Blank field in ${cat}: ${JSON.stringify(row)}`);
+              const key=cat+'|'+row[1];
+              if(seen.has(key)) throw new Error(`Duplicate Korean phrase in ${cat}: ${row[1]}`);
+              seen.add(key);
+              total++;
+            }
+          }
+          if(total<100) throw new Error(`Expected at least 100 lessons, found ${total}`);
+          console.log(`Validated ${total} lessons`);
+          NODE
       - name: Guard unsafe transcript rendering
         run: |
           if grep -q 'feedback.*innerHTML\|innerHTML.*feedback' index.html; then
@@ -44,7 +72,8 @@ jobs:
           fi
       - name: Validate hardened service worker
         run: |
-          grep -q "kor-practice-v3" sw.js
+          grep -q "kor-practice-v4" sw.js
+          grep -q "lessons.js" sw.js
           grep -q "url.origin!==self.location.origin" sw.js
           grep -q "request.mode==='navigate'" sw.js
           grep -q "pwa-check.html" sw.js
