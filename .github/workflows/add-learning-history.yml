@@ -1,0 +1,52 @@
+name: Add learning history
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-learning-history.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add local learning history
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('.done{font-size:14px;text-align:center;font-weight:800;margin-bottom:8px}', '.done{font-size:14px;text-align:center;font-weight:800;margin-bottom:4px}.historyline{font-size:13px;text-align:center;font-weight:750;margin-bottom:8px;color:#555}')
+          s=s.replace('<div id="done" class="done"></div><div class="nav">', '<div id="done" class="done"></div><div id="history" class="historyline"></div><div class="nav">')
+          s=s.replace("weakSet=new Set(JSON.parse(localStorage.getItem('korWeak')||'[]')),voices=[];", "weakSet=new Set(JSON.parse(localStorage.getItem('korWeak')||'[]')),stats=JSON.parse(localStorage.getItem('korStats')||'{}'),voices=[];")
+          hook="function updateWeak(sc){let k=c+':'+i;if(sc<75)weakSet.add(k);else if(sc>=90)weakSet.delete(k);localStorage.setItem('korWeak',JSON.stringify([...weakSet]))}"
+          add=hook+"function recordAttempt(sc){let k=c+':'+i,x=stats[k]||{attempts:0,best:0,last:0};x.attempts++;x.best=Math.max(x.best,sc);x.last=Date.now();stats[k]=x;localStorage.setItem('korStats',JSON.stringify(stats));$('history').textContent=`練習 ${x.attempts}回　最高 ${x.best}%`}"
+          if 'function recordAttempt(sc)' not in s:
+              if hook not in s: raise SystemExit('updateWeak hook missing')
+              s=s.replace(hook,add,1)
+          old="$('done').textContent=`できた：${[...doneSet].filter(k=>k.startsWith(c+':')).length} / ${D[c].length}　要復習：${[...weakSet].filter(k=>k.startsWith(c+':')).length}`;"
+          new=old+"let hx=stats[c+':'+i];$('history').textContent=hx?`練習 ${hx.attempts}回　最高 ${hx.best}%`:'';"
+          if "let hx=stats[c+':'+i]" not in s:
+              if old not in s: raise SystemExit('render status hook missing')
+              s=s.replace(old,new,1)
+          s=s.replace('updateWeak(sc);showFeedback([textNode(\'div\',\'聞き取り一致度 \'', 'updateWeak(sc);recordAttempt(sc);showFeedback([textNode(\'div\',\'聞き取り一致度 \'')
+          s=s.replace("box.replaceChildren();updateWeak(sc);let msg=", "box.replaceChildren();updateWeak(sc);recordAttempt(sc);let msg=")
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify history
+        run: |
+          grep -q 'id="history"' index.html
+          grep -q 'korStats' index.html
+          grep -q 'function recordAttempt' index.html
+          grep -q '最高' index.html
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Track per-phrase practice history locally'
+          git push
