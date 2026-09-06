@@ -19,6 +19,7 @@ jobs:
           test -f index.html
           test -f manifest.webmanifest
           test -f sw.js
+          test -f pwa-check.html
       - name: Validate PWA wiring
         run: |
           grep -q 'rel="manifest"' index.html
@@ -32,6 +33,7 @@ jobs:
           grep -q '>ビジネス<' index.html
           grep -q 'お手本を聞く' index.html
           grep -q '発音チェック' index.html
+          grep -q '聞き取り一致度' index.html
           grep -q '書く練習' index.html
           grep -q 'ミニ会話' index.html
       - name: Guard unsafe transcript rendering
@@ -40,5 +42,9 @@ jobs:
             echo 'Unsafe feedback innerHTML usage detected'
             exit 1
           fi
-      - name: Validate service worker cache version
-        run: grep -q "kor-practice-v2" sw.js
+      - name: Validate hardened service worker
+        run: |
+          grep -q "kor-practice-v3" sw.js
+          grep -q "url.origin!==self.location.origin" sw.js
+          grep -q "request.mode==='navigate'" sw.js
+          grep -q "pwa-check.html" sw.js
