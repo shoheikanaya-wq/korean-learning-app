@@ -1,0 +1,46 @@
+name: Continue Korean content refinement
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refine-korean-content-2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine selected pronunciation guides and replies
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('lessons.js')
+          s=p.read_text(encoding='utf-8')
+          repl={
+            "['自己紹介','처음 뵙겠습니다.','チョウム プェプケッスムニダ'":"['自己紹介','처음 뵙겠습니다.','チョウム ペプケッスムニダ'",
+            "['遅延','일정이 조금 늦어지고 있습니다.','イルチョンイ チョグム ヌジョジゴ イッスムニダ'":"['遅延','일정이 조금 늦어지고 있습니다.','イルッチョンイ チョグム ヌジョジゴ イッスムニダ'",
+            "['何番線','몇 번 승강장이에요?','ミョッ ポン スンガンジャンイエヨ'":"['何番線','몇 번 승강장이에요?','ミョッポン スンガンジャンイエヨ'",
+            "['荷物紛失','제 짐이 안 나와요.','チェ チミ アン ナワヨ','→ → ↘','私の荷物が出てきません。','제 짐이 안 나와요.','직원에게 확인해드릴게요.']":"['荷物紛失','제 짐이 안 나와요.','チェ チミ アン ナワヨ','→ → ↘','私の荷物が出てきません。','제 짐이 안 나와요.','확인해 드릴게요.']"
+          }
+          for old,new in repl.items():
+            if old not in s: raise SystemExit('expected phrase not found: '+old[:50])
+            s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify refinements
+        run: |
+          grep -q "처음 뵙겠습니다.','チョウム ペプケッスムニダ'" lessons.js
+          grep -q "일정이 조금 늦어지고 있습니다.','イルッチョンイ" lessons.js
+          grep -q "몇 번 승강장이에요?','ミョッポン" lessons.js
+          grep -q "제 짐이 안 나와요.','확인해 드릴게요.'" lessons.js
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lessons.js
+          git commit -m 'Refine Korean pronunciation guides and travel reply'
+          git push
