@@ -1,0 +1,58 @@
+name: Compact top navigation v3.1
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/compact-top-nav-v31.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add compact top navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Ver.3.0</span>','Ver.3.1</span>')
+          s=s.replace('<div>Ver.3.0</div><div>Personal Korean Learning Project</div>','<div>Ver.3.1</div><div>Personal Korean Learning Project</div>')
+          s=s.replace('<div>Ver.3.0　添付見本方式：カタカナ一語の中で文字サイズ・高さを変え、矢印も文字上に直接表示</div>','<div>Ver.3.1　スクロール量を削減／上部にも前へ・次へを追加</div><div>Ver.3.0　添付見本方式：カタカナ一語の中で文字サイズ・高さを変え、矢印も文字上に直接表示</div>')
+
+          marker='<div class="tabs"><button class="on" data-c="daily">日常</button><button data-c="travel">トラベル</button><button data-c="business">ビジネス</button></div>'
+          topnav=marker+'<div class="topnav"><button id="topPrev">← 前へ</button><button id="topNext" class="primary">次へ →</button></div>'
+          if marker not in s: raise SystemExit('tabs marker missing')
+          s=s.replace(marker,topnav)
+
+          css='''\n/* Ver.3.1 compact layout + top navigation */\n.topnav{display:grid;grid-template-columns:1fr 1.35fr;gap:8px;margin:7px 0 6px;position:sticky;top:4px;z-index:12;padding:5px;border-radius:14px;background:rgba(243,239,230,.96);backdrop-filter:blur(5px)}\n.topnav button{min-height:48px;font-size:17px}.topnav .primary{background:#65584d;color:#fffaf3}\n.lessonTop{margin-bottom:5px}.tabs{gap:6px}.tabs button{min-height:48px!important}.scene{margin-top:6px;padding:6px;min-height:50px}.reviewtools{margin-top:5px;gap:6px}.reviewjump{min-height:43px}.card{margin-top:7px;padding:12px}.ko{margin-top:0}.pronwrap{margin:8px 0 3px;padding-top:10px!important}.ja{margin:4px 0 8px}.listenrow,.actions{gap:6px}.listenrow button,.actions button{min-height:52px}.writing,.mini{margin-top:10px;padding-top:10px}.progress{margin:8px 0 4px}.done{margin-bottom:2px}.historyline{margin-bottom:5px}.nav{gap:7px}\n@media(max-width:520px){.topnav{top:2px;margin:5px 0 4px;padding:4px}.topnav button{min-height:46px;font-size:16px}.card{padding:10px}.lessonTop{margin-bottom:3px}.reviewtools{grid-template-columns:1fr 1fr}.pronwrap{margin-top:6px}}\n'''
+          s=s.replace('</style></head>',css+'</style></head>')
+
+          old="$('prev').onclick=()=>{i=(i-1+D[c].length)%D[c].length;render();$('scene').value=i;scrollTo(0,0)};$('next').onclick=()=>{doneSet.add(c+':'+i);localStorage.setItem('korDone',JSON.stringify([...doneSet]));i=(i+1)%D[c].length;render();$('scene').value=i;scrollTo(0,0)};"
+          new="function goPrev(){i=(i-1+D[c].length)%D[c].length;render();$('scene').value=i;scrollTo(0,0)}function goNext(){doneSet.add(c+':'+i);localStorage.setItem('korDone',JSON.stringify([...doneSet]));i=(i+1)%D[c].length;render();$('scene').value=i;scrollTo(0,0)}$('prev').onclick=goPrev;$('next').onclick=goNext;$('topPrev').onclick=goPrev;$('topNext').onclick=goNext;"
+          if old not in s: raise SystemExit('nav handler block missing')
+          s=s.replace(old,new)
+
+          s=s.replace('lessons.js?v=3001','lessons.js?v=3101').replace('lessons-extra.js?v=3001','lessons-extra.js?v=3101').replace("sw.js?v=3001","sw.js?v=3101")
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js');t=sw.read_text(encoding='utf-8')
+          t=t.replace("const CACHE='kor-practice-v11';","const CACHE='kor-practice-v12';").replace('./lessons.js?v=3001','./lessons.js?v=3101').replace('./lessons-extra.js?v=3001','./lessons-extra.js?v=3101')
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.3.1' index.html
+          grep -q 'id="topPrev"' index.html
+          grep -q 'id="topNext"' index.html
+          grep -q 'function goPrev' index.html
+          grep -q 'function goNext' index.html
+          grep -q "kor-practice-v12" sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Add compact top navigation for Ver.3.1'
+          git push
