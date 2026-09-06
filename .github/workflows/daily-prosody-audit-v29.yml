@@ -1,0 +1,36 @@
+name: Daily prosody audit v2.9
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily-prosody-audit-v29.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine daily lesson prosody
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('lessons.js');s=p.read_text(encoding='utf-8')
+          pairs={"'アンニョンハセヨ','↗ → ↘'":"'アンニョンハセヨ','↴ 〜 ↘'","'カムサハムニダ','→ ↘'":"'カムサハムニダ','↴ 〜 ↘'","'チェソンハムニダ','→ ↘'":"'チェソンハムニダ','↴ 〜 ↘'","'イゴ オルマエヨ','→ → ↗'":"'イゴ オルマエヨ','→ 〜 ↗'","'イボ ブァド デヨ','→ → ↗'":"'イボ ブァド デヨ','→ 〜 ↗'","'ト クン サイジュ イッソヨ','→ → ↗'":"'ト クン サイジュ イッソヨ','→ → 〜 ↗'","'ムォガ チェイル マシッソヨ','→ → ↗'":"'ムォガ チェイル マシッソヨ','↴ → 〜 ↗'","'ファジャンシル オディエヨ','→ ↗'":"'ファジャンシル オディエヨ','→ 〜 ↗'","'チグム トンファ クェンチャナヨ','→ → ↗'":"'チグム トンファ クェンチャナヨ','→ → 〜 ↗'","'タシ マレ ジュセヨ','→ ↘'":"'タシ マレ ジュセヨ','→ 〜 ↘'","'チョンチョニ マレ ジュセヨ','→ → ↘'":"'チョンチョニ マレ ジュセヨ','↴ → 〜 ↘'","'チャムッカンマン キダリョ ジュセヨ','→ → ↘'":"'チャムッカンマン キダリョ ジュセヨ','↴ → 〜 ↘'","'サジン ッチゴド デヨ','→ → ↗'":"'サジン ッチゴド デヨ','→ 〜 ↗'","'チグム ミョッ シエヨ','→ ↗'":"'チグム ミョッ シエヨ','→ ↗ ↗'","'ネイル シガン イッソヨ','→ → ↗'":"'ネイル シガン イッソヨ','→ 〜 ↗'"}
+          for a,b in pairs.items():s=s.replace(a,b)
+          p.write_text(s,encoding='utf-8')
+          p=Path('index.html');s=p.read_text(encoding='utf-8').replace('Ver.2.8</span>','Ver.2.9</span>').replace('<div>Ver.2.8</div><div>Personal Korean Learning Project</div>','<div>Ver.2.9</div><div>Personal Korean Learning Project</div>').replace('<div>Ver.2.8　発音カタカナを音のかたまり単位で上下・大小表示し、矢印との対応を強化</div>','<div>Ver.2.9　日常会話の抑揚データを音のかたまり単位で再調整</div><div>Ver.2.8　発音カタカナを音のかたまり単位で上下・大小表示し、矢印との対応を強化</div>').replace('lessons.js?v=2801','lessons.js?v=2901').replace('lessons-extra.js?v=2801','lessons-extra.js?v=2901').replace("sw.js?v=2801","sw.js?v=2901");p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js');t=sw.read_text(encoding='utf-8').replace("const CACHE='kor-practice-v9';","const CACHE='kor-practice-v10';").replace('./lessons.js?v=2801','./lessons.js?v=2901').replace('./lessons-extra.js?v=2801','./lessons-extra.js?v=2901');sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.2.9' index.html
+          grep -q "kor-practice-v10" sw.js
+          grep -q "アンニョンハセヨ','↴ 〜 ↘" lessons.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lessons.js index.html sw.js
+          git commit -m 'Refine daily conversation prosody for Ver.2.9'
+          git push
