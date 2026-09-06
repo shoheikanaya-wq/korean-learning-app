@@ -1,0 +1,56 @@
+name: Inline katakana prosody v3.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inline-katakana-prosody-v30.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render prosody inside katakana
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          s=s.replace('Ver.2.9</span>','Ver.3.0</span>')
+          s=s.replace('<div>Ver.2.9</div><div>Personal Korean Learning Project</div>','<div>Ver.3.0</div><div>Personal Korean Learning Project</div>')
+          s=s.replace('<div>Ver.2.9　日常会話の抑揚データを音のかたまり単位で再調整</div>','<div>Ver.3.0　添付見本方式：カタカナ一語の中で文字サイズ・高さを変え、矢印も文字上に直接表示</div><div>Ver.2.9　日常会話の抑揚データを音のかたまり単位で再調整</div>')
+
+          s=s.replace('<div id="tone" class="tone"></div><div class="prosody-legend">文字の上下・大きさ ＋ 矢印で声の上がり下がりを表示</div>','<div id="tone" class="tone" aria-hidden="true"></div>')
+
+          css='''\n/* Ver.3.0: prosody is drawn directly into each katakana mora */\n.pron{display:flex;justify-content:center;align-items:flex-end;gap:3px;flex-wrap:wrap;min-height:86px;padding-top:24px;overflow:visible}\n.pron .mora{position:relative;display:inline-block;font-weight:900;line-height:1;transform-origin:center bottom;white-space:nowrap}\n.pron .mora .pitch-arrow{position:absolute;left:50%;top:-22px;transform:translateX(-50%);font-size:17px;line-height:1;color:#7b5232;font-weight:950}\n.pron .space{width:10px}\n.tone{display:none!important}\n.prosody-legend{display:none!important}\nbody.big .pron .mora{font-size:34px}\n@media(max-width:520px){.pron{min-height:78px;padding-top:21px}.pron .mora .pitch-arrow{top:-19px;font-size:15px}body.big .pron .mora{font-size:30px}.pron .space{width:7px}}\n'''
+          s=s.replace('</style></head>',css+'</style></head>')
+
+          old="function renderPron(text,tone){let parts=String(text||'').split(' '),arrows=String(tone||'').split(/\\s+/);$('pron').replaceChildren();parts.forEach((p,n)=>{let a=arrows[n]||'→',sp=document.createElement('span');sp.textContent=p;let cls='prosody-flat';if(a==='↴')cls='prosody-high';else if(a==='↵')cls='prosody-low';else if(a==='↗')cls='prosody-rise';else if(a==='↘')cls='prosody-fall';sp.className='p '+cls;$('pron').appendChild(sp)});$('tone').textContent=tone||'';$('tone').setAttribute('aria-label','抑揚 '+(tone||''))}"
+          new="function renderPron(text,tone){const el=$('pron');el.replaceChildren();const chars=Array.from(String(text||''));const moras=[];for(const ch of chars){if(ch===' '){moras.push(' ');continue}if(/[ァィゥェォャュョヮー]/.test(ch)&&moras.length&&moras[moras.length-1]!==' ')moras[moras.length-1]+=ch;else moras.push(ch)}const voiced=moras.map((m,i)=>({m,i})).filter(x=>x.m!==' ');const arrows=String(tone||'').trim().split(/\\s+/).filter(Boolean);const val=a=>a==='↴'?2:a==='↗'?1:a==='↘'?-1:a==='↵'?-2:0;const keys=[];if(arrows.length){arrows.forEach((a,j)=>{const pos=arrows.length===1?0:Math.round(j*(voiced.length-1)/(arrows.length-1));keys.push({pos,a,v:val(a)})})}const pitchAt=n=>{if(!keys.length)return 0;if(n<=keys[0].pos)return keys[0].v;if(n>=keys[keys.length-1].pos)return keys[keys.length-1].v;for(let k=0;k<keys.length-1;k++){const a=keys[k],b=keys[k+1];if(n>=a.pos&&n<=b.pos){const r=(n-a.pos)/(b.pos-a.pos||1);return a.v+(b.v-a.v)*r}}return 0};let vi=0;moras.forEach(m=>{if(m===' '){const gap=document.createElement('span');gap.className='space';el.appendChild(gap);return}const p=pitchAt(vi),sp=document.createElement('span');sp.className='mora';sp.textContent=m;const scale=Math.max(.76,Math.min(1.28,1+p*.13));const y=-p*7;sp.style.fontSize=(34*scale)+'px';sp.style.transform='translateY('+y+'px)';const key=keys.find(k=>k.pos===vi);if(key){const ar=document.createElement('span');ar.className='pitch-arrow';ar.textContent=key.a;sp.appendChild(ar)}el.appendChild(sp);vi++});$('tone').textContent=tone||'';$('pron').setAttribute('aria-label','発音 '+String(text||'')+'、抑揚 '+String(tone||''))}"
+          if old not in s:
+              raise SystemExit('renderPron block not found')
+          s=s.replace(old,new)
+
+          s=s.replace('lessons.js?v=2901','lessons.js?v=3001').replace('lessons-extra.js?v=2901','lessons-extra.js?v=3001').replace("sw.js?v=2901","sw.js?v=3001")
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8').replace("const CACHE='kor-practice-v10';","const CACHE='kor-practice-v11';").replace('./lessons.js?v=2901','./lessons.js?v=3001').replace('./lessons-extra.js?v=2901','./lessons-extra.js?v=3001')
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.3.0' index.html
+          grep -q 'className=.mora.' index.html
+          grep -q 'pitch-arrow' index.html
+          ! grep -q '文字の上下・大きさ ＋ 矢印で声の上がり下がりを表示' index.html
+          grep -q "kor-practice-v11" sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Render prosody directly inside katakana for Ver.3.0'
+          git push
