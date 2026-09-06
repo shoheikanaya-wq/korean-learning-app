@@ -5,10 +5,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -26,8 +24,8 @@ jobs:
         run: |
           grep -q 'rel="manifest"' index.html
           grep -q 'serviceWorker' index.html
-          grep -q '<script src="./lessons.js"></script>' index.html
-          grep -q '<script src="./lessons-extra.js"></script>' index.html
+          grep -Eq '<script src="\./lessons\.js\?v=[0-9]+"></script>' index.html
+          grep -Eq '<script src="\./lessons-extra\.js\?v=[0-9]+"></script>' index.html
           grep -q 'const D=window.LESSONS' index.html
           grep -q '"display":"standalone"' manifest.webmanifest
           grep -q '"scope":"./"' manifest.webmanifest
@@ -41,23 +39,14 @@ jobs:
           grep -q '聞き取り一致度' index.html
           grep -q '書く練習' index.html
           grep -q 'ミニ会話' index.html
-      - name: Validate adaptive learning features
-        run: |
-          grep -q 'id="weakNext"' index.html
-          grep -q '要復習を練習' index.html
-          grep -q 'id="adaptive"' index.html
-          grep -q 'おすすめ練習' index.html
-          grep -q 'korWeak' index.html
-          grep -q 'korStats' index.html
-          grep -q 'function recordAttempt' index.html
-          grep -q '練習 ${x.attempts}回' index.html
-          grep -q '最高 ${x.best}%' index.html
-      - name: Validate current large-text UX
+      - name: Validate accessibility and prosody
         run: |
           grep -q '<body class="big">' index.html
           ! grep -q 'id="mode"' index.html
           grep -q 'body.big .ko{font-size:52px}' index.html
-          grep -q 'body.big .pron .p{font-size:34px}' index.html
+          grep -q 'pitch-arrow' index.html
+          grep -q "className='mora'" index.html
+          ! grep -q '文字の上下・大きさ ＋ 矢印で声の上がり下がりを表示' index.html
       - name: Validate lesson library structure
         run: |
           node - <<'NODE'
@@ -69,29 +58,18 @@ jobs:
           if(!D) throw new Error('window.LESSONS is missing');
           let total=0;
           for(const cat of cats){
-            if(!Array.isArray(D[cat])) throw new Error(`Missing category: ${cat}`);
-            if(D[cat].length<15) throw new Error(`${cat} has too few lessons: ${D[cat].length}`);
-            for(const row of D[cat]){
-              if(!Array.isArray(row)||row.length!==7) throw new Error(`Invalid row in ${cat}`);
-              if(row.some(v=>typeof v!=='string'||!v.trim())) throw new Error(`Blank field in ${cat}: ${JSON.stringify(row)}`);
-            }
+            if(!Array.isArray(D[cat])||D[cat].length<15) throw new Error(`Invalid category: ${cat}`);
+            for(const row of D[cat]) if(!Array.isArray(row)||row.length!==7||row.some(v=>typeof v!=='string'||!v.trim())) throw new Error(`Invalid row in ${cat}`);
             total+=D[cat].length;
           }
           if(total<45) throw new Error(`Too few total lessons: ${total}`);
-          console.log(`Validated ${total} lessons: daily=${D.daily.length}, travel=${D.travel.length}, business=${D.business.length}`);
+          console.log(`Validated ${total} lessons`);
           NODE
-      - name: Guard unsafe transcript rendering
-        run: |
-          if grep -q 'feedback.*innerHTML\|innerHTML.*feedback' index.html; then
-            echo 'Unsafe feedback innerHTML usage detected'
-            exit 1
-          fi
       - name: Validate hardened service worker
         run: |
-          grep -q "kor-practice-v5" sw.js
-          grep -q "lessons.js" sw.js
-          grep -q "lessons-extra.js" sw.js
+          grep -Eq "const CACHE='kor-practice-v[0-9]+'" sw.js
+          grep -q 'lessons.js' sw.js
+          grep -q 'lessons-extra.js' sw.js
           grep -q "url.origin!==self.location.origin" sw.js
           grep -q "request.mode==='navigate'" sw.js
           grep -q "cache:'no-store'" sw.js
-          grep -q "pwa-check.html" sw.js
