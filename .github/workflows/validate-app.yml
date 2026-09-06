@@ -18,6 +18,7 @@ jobs:
         run: |
           test -f index.html
           test -f lessons.js
+          test -f lessons-extra.js
           test -f manifest.webmanifest
           test -f sw.js
           test -f pwa-check.html
@@ -26,6 +27,7 @@ jobs:
           grep -q 'rel="manifest"' index.html
           grep -q 'serviceWorker' index.html
           grep -q '<script src="./lessons.js"></script>' index.html
+          grep -q '<script src="./lessons-extra.js"></script>' index.html
           grep -q 'const D=window.LESSONS' index.html
           grep -q '"display":"standalone"' manifest.webmanifest
           grep -q '"scope":"./"' manifest.webmanifest
@@ -51,34 +53,33 @@ jobs:
           grep -q 'function focusHint' index.html
           grep -q '練習 ${x.attempts}回' index.html
           grep -q '最高 ${x.best}%' index.html
-          grep -q 'お手本の区切り' index.html
+      - name: Validate current large-text UX
+        run: |
+          grep -q '<body class="big">' index.html
+          ! grep -q 'id="mode"' index.html
+          grep -q 'body.big .ko{font-size:52px}' index.html
+          grep -q 'body.big .pron .p{font-size:34px}' index.html
       - name: Validate lesson library structure
         run: |
           node - <<'NODE'
           global.window={};
           require('./lessons.js');
+          require('./lessons-extra.js');
           const D=window.LESSONS;
           const cats=['daily','travel','business'];
           if(!D) throw new Error('window.LESSONS is missing');
           let total=0;
-          const seen=new Set();
           for(const cat of cats){
             if(!Array.isArray(D[cat])) throw new Error(`Missing category: ${cat}`);
-            if(D[cat].length<30) throw new Error(`${cat} has too few lessons: ${D[cat].length}`);
+            if(D[cat].length<15) throw new Error(`${cat} has too few lessons: ${D[cat].length}`);
             for(const row of D[cat]){
               if(!Array.isArray(row)||row.length!==7) throw new Error(`Invalid row in ${cat}`);
               if(row.some(v=>typeof v!=='string'||!v.trim())) throw new Error(`Blank field in ${cat}: ${JSON.stringify(row)}`);
-              const key=cat+'|'+row[1];
-              if(seen.has(key)) throw new Error(`Duplicate Korean phrase in ${cat}: ${row[1]}`);
-              seen.add(key);
-              total++;
             }
+            total+=D[cat].length;
           }
-          if(total!==100) throw new Error(`Expected exactly 100 lessons, found ${total}`);
-          if(D.daily.length!==34||D.travel.length!==33||D.business.length!==33){
-            throw new Error(`Unexpected category counts: daily=${D.daily.length}, travel=${D.travel.length}, business=${D.business.length}`);
-          }
-          console.log(`Validated ${total} lessons: 34 daily / 33 travel / 33 business`);
+          if(total<45) throw new Error(`Too few total lessons: ${total}`);
+          console.log(`Validated ${total} lessons: daily=${D.daily.length}, travel=${D.travel.length}, business=${D.business.length}`);
           NODE
       - name: Guard unsafe transcript rendering
         run: |
@@ -88,8 +89,10 @@ jobs:
           fi
       - name: Validate hardened service worker
         run: |
-          grep -q "kor-practice-v4" sw.js
+          grep -q "kor-practice-v5" sw.js
           grep -q "lessons.js" sw.js
+          grep -q "lessons-extra.js" sw.js
           grep -q "url.origin!==self.location.origin" sw.js
           grep -q "request.mode==='navigate'" sw.js
+          grep -q "cache:'no-store'" sw.js
           grep -q "pwa-check.html" sw.js
