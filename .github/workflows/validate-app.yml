@@ -1,0 +1,44 @@
+name: Validate Korean learning app
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required files
+        run: |
+          test -f index.html
+          test -f manifest.webmanifest
+          test -f sw.js
+      - name: Validate PWA wiring
+        run: |
+          grep -q 'rel="manifest"' index.html
+          grep -q 'serviceWorker' index.html
+          grep -q '"display":"standalone"' manifest.webmanifest
+          grep -q '"scope":"./"' manifest.webmanifest
+      - name: Validate learning pillars
+        run: |
+          grep -q '>日常<' index.html
+          grep -q '>トラベル<' index.html
+          grep -q '>ビジネス<' index.html
+          grep -q 'お手本を聞く' index.html
+          grep -q '発音チェック' index.html
+          grep -q '書く練習' index.html
+          grep -q 'ミニ会話' index.html
+      - name: Guard unsafe transcript rendering
+        run: |
+          if grep -q 'feedback.*innerHTML\|innerHTML.*feedback' index.html; then
+            echo 'Unsafe feedback innerHTML usage detected'
+            exit 1
+          fi
+      - name: Validate service worker cache version
+        run: grep -q "kor-practice-v2" sw.js
