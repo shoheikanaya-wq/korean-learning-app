@@ -1,0 +1,41 @@
+name: Consolidate Ver.2.2 UI
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/consolidate-ver22-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Consolidate UI changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('<span class="version">Ver.2.1</span>','<span class="version">Ver.2.2</span>',1)
+          s=s.replace('.actions{grid-template-columns:1fr 1fr;margin-top:9px}', '.actions{grid-template-columns:1fr;margin-top:9px}',1)
+          s=s.replace('<div class="actions"><button id="speak" class="speak">🎤 発音チェック</button><button id="retry">↻ もう一度</button></div>', '<div class="actions"><button id="speak" class="speak">🎤 発音チェック</button></div>',1)
+          s=s.replace("$('retry').onclick=()=>say(D[c][i][1],.78);",'',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.2.2' index.html
+          ! grep -q 'id="retry"' index.html
+          ! grep -q "$('retry')" index.html
+          grep -q '.actions{grid-template-columns:1fr;margin-top:9px}' index.html
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Consolidate Ver.2.2 UI into main page'
+          git push
