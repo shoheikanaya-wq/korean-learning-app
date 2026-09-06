@@ -1,0 +1,45 @@
+name: Improve pronunciation feedback
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/improve-pronunciation-feedback.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add targeted feedback
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          hook="function similarity(a,b){a=norm(a);b=norm(b);if(!a||!b)return 0;return Math.max(0,Math.round((1-lev(a,b)/Math.max(a.length,b.length))*100))}"
+          add=hook+"function focusHint(heard,target){let h=norm(heard),t=norm(target);if(!h||!t||h===t)return '';let n=Math.min(h.length,t.length),pos=0;while(pos<n&&h[pos]===t[pos])pos++;let words=target.replace(/[.?!？！。、]/g,'').split(/\\s+/),acc=0,pick=words[words.length-1]||target;for(let w of words){let end=acc+w.length;if(pos<=end){pick=w;break}acc=end}return `まず「${pick}」をゆっくり確認。お手本の区切りで1回まねしてから、もう一度話してみましょう。`}"
+          if 'function focusHint(heard,target)' not in s:
+              if hook not in s: raise SystemExit('similarity hook missing')
+              s=s.replace(hook,add,1)
+          old="updateWeak(sc);recordAttempt(sc);showFeedback([textNode('div','聞き取り一致度 '+sc+'%','score'),textNode('div','聞き取り：'+heard),textNode('div',msg)])"
+          new="updateWeak(sc);recordAttempt(sc);let hint=focusHint(heard,target),nodes=[textNode('div','聞き取り一致度 '+sc+'%','score'),textNode('div','聞き取り：'+heard),textNode('div',msg)];if(hint)nodes.push(textNode('div',hint));showFeedback(nodes)"
+          if old not in s: raise SystemExit('speech feedback hook missing')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify targeted feedback
+        run: |
+          grep -q 'function focusHint' index.html
+          grep -q 'まず「' index.html
+          grep -q 'お手本の区切り' index.html
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Give targeted follow-up after speech recognition'
+          git push
