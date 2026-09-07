@@ -18,59 +18,33 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import json
+          import json,re
 
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-
-          # Critical bug: old mode button was removed from HTML, but this null access
-          # stopped JS execution before Service Worker registration.
           old="$('mode').onclick=()=>{let on=document.body.classList.toggle('big');$('mode').textContent=on?'文字 標準':'文字 大きめ';localStorage.setItem('korBig',on?'1':'0')};"
           new="const modeBtn=$('mode');if(modeBtn){modeBtn.onclick=()=>{let on=document.body.classList.toggle('big');modeBtn.textContent=on?'文字 標準':'文字 大きめ';localStorage.setItem('korBig',on?'1':'0')}};"
-          if old in s:
-              s=s.replace(old,new)
-
-          # PWA/mobile metadata.
-          s=s.replace('<meta name="theme-color" content="#222222"><link rel="manifest" href="./manifest.webmanifest">',
-                      '<meta name="theme-color" content="#65584d"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="韓国語">')
-
+          s=s.replace(old,new)
+          s=s.replace('<meta name="theme-color" content="#222222"><link rel="manifest" href="./manifest.webmanifest">','<meta name="theme-color" content="#65584d"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="韓国語">')
           s=s.replace('Ver.3.1</span>','Ver.3.2</span>',1)
-          s=s.replace('<div>Ver.3.1</div>','<div>Ver.3.2</div>',1)
-          hist='<div>Ver.3.2　PWAインストール判定を修復／Service Worker登録を安定化</div>'
-          marker='<details class="version-history"><summary>更新履歴を見る</summary>'
-          if hist not in s and marker in s:
-              s=s.replace(marker,marker+hist,1)
-
-          s=s.replace('lessons.js?v=3101','lessons.js?v=3201')
-          s=s.replace('lessons-extra.js?v=3101','lessons-extra.js?v=3201')
-          s=s.replace("register('./sw.js?v=3101'","register('./sw.js?v=3201'")
+          s=s.replace('lessons.js?v=3101','lessons.js?v=3201').replace('lessons-extra.js?v=3101','lessons-extra.js?v=3201').replace("register('./sw.js?v=3101'","register('./sw.js?v=3201'")
           p.write_text(s,encoding='utf-8')
 
-          m={
-            'id':'./',
-            'name':'韓国語 実践トレーニング',
-            'short_name':'韓国語',
+          manifest={
+            'id':'./','name':'韓国語 実践トレーニング','short_name':'韓国語',
             'description':'日常・トラベル・ビジネスを聞く・話す・使うで練習する韓国語学習アプリ',
-            'start_url':'./?source=pwa&v=3.2',
-            'scope':'./',
-            'display':'standalone',
-            'display_override':['standalone','minimal-ui'],
-            'orientation':'portrait-primary',
-            'background_color':'#f3efe6',
-            'theme_color':'#65584d',
-            'lang':'ja','dir':'ltr',
+            'start_url':'./?source=pwa&v=3.2','scope':'./','display':'standalone',
+            'orientation':'portrait-primary','background_color':'#f3efe6','theme_color':'#65584d','lang':'ja','dir':'ltr',
             'icons':[
               {'src':'./icons/icon-192.png','sizes':'192x192','type':'image/png','purpose':'any'},
               {'src':'./icons/icon-512.png','sizes':'512x512','type':'image/png','purpose':'any maskable'}
             ]
           }
-          Path('manifest.webmanifest').write_text(json.dumps(m,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+          Path('manifest.webmanifest').write_text(json.dumps(manifest,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
 
           sw=Path('sw.js').read_text(encoding='utf-8')
-          sw=sw.replace("const CACHE='kor-practice-v12';","const CACHE='kor-practice-v14';")
+          sw=re.sub(r"const CACHE='kor-practice-v\d+';","const CACHE='kor-practice-v14';",sw)
           sw=sw.replace("'./lessons.js?v=3101','./lessons-extra.js?v=3101'","'./lessons.js?v=3201','./lessons-extra.js?v=3201'")
-          if "'./icons/icon-192.png'" not in sw:
-              sw=sw.replace("'./manifest.webmanifest','./pwa-check.html'","'./manifest.webmanifest','./pwa-check.html','./icons/icon-192.png','./icons/icon-512.png'")
           Path('sw.js').write_text(sw,encoding='utf-8')
           PY
       - name: Verify repair
