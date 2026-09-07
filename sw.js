@@ -1,5 +1,5 @@
-const CACHE='kor-practice-v12';
-const SHELL=['./','./index.html','./lessons.js?v=3101','./lessons-extra.js?v=3101','./manifest.webmanifest','./pwa-check.html'];
+const CACHE='kor-practice-v13';
+const SHELL=['./','./index.html','./lessons.js?v=3101','./lessons-extra.js?v=3101','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./pwa-check.html'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
@@ -37,13 +37,11 @@ self.addEventListener('fetch',event=>{
   const url=new URL(request.url);
   if(url.origin!==self.location.origin) return;
 
-  // HTML/JSはオンライン時に必ず最新版を優先。オフライン時だけキャッシュを使う。
-  if(request.mode==='navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js')){
+  if(request.mode==='navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.webmanifest')){
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // その他はキャッシュ優先で通信量を抑える。
   event.respondWith(
     caches.match(request).then(cached=>cached||fetch(request).then(response=>{
       if(response&&response.ok){
