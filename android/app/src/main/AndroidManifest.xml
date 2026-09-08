@@ -2,7 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <application android:theme="@style/AppTheme" android:label="韓国語" android:usesCleartextTraffic="false">
+    <application
+        android:theme="@style/AppTheme"
+        android:label="韓国語"
+        android:icon="@drawable/korean_icon"
+        android:roundIcon="@drawable/korean_icon"
+        android:usesCleartextTraffic="false"
+        android:hardwareAccelerated="true">
         <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
