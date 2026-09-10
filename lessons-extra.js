@@ -58,6 +58,7 @@
     ['工場・復旧','정상적으로 복구됐어요.','チョンサンジョグロ ポックドェッソヨ','→ ↘','正常に復旧しました。','정상적으로 복구됐어요.','수고하셨습니다.']
   );
 
+  if(typeof document==='undefined')return;
   document.addEventListener('DOMContentLoaded',()=>{
     const q=id=>document.getElementById(id);
     const retry=q('retry');
