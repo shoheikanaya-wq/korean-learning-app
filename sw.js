@@ -1,5 +1,5 @@
-const CACHE='kor-practice-v15';
-const SHELL=['./','./index.html','./lessons.js?v=3401','./lessons-extra.js?v=3401','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./practice-tools.js?v=3401','./install.html','./install.js?v=3401','./install-qr.svg'];
+const CACHE='kor-practice-v16';
+const SHELL=['./','./index.html','./lessons.js?v=3501','./lessons-extra.js?v=3501','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./practice-tools.js?v=3501','./install.html','./install-check.js?v=3501','./install.js?v=3501','./install-qr.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(

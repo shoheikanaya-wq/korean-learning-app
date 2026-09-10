@@ -8,7 +8,7 @@
   window.addEventListener('appinstalled',()=>{pending=null;$('status').textContent='インストールが受け付けられました。ホーム画面の「韓国語」アイコンから開いてください。';$('install').hidden=true;});
   $('install').onclick=async()=>{
     if(standalone()){installed();return;}
-    if(!pending){$('status').textContent='このブラウザからインストール画面を開けませんでした。下の手順でブラウザのメニューから追加してください。';$('steps').scrollIntoView({behavior:'smooth',block:'center'});return;}
+    if(!pending){$('status').textContent='Chromeからアプリのインストール許可を受け取れていません。「ショートカットを作成」は選ばず、下の確認結果を作成者へ送ってください。';$('deviceCheck').open=true;$('deviceCheck').scrollIntoView({behavior:'smooth',block:'start'});return;}
     const prompt=pending;pending=null;
     try{await prompt.prompt();const choice=await prompt.userChoice;$('status').textContent=choice.outcome==='accepted'?'追加処理中です。ホーム画面の「韓国語」アイコンを確認してください。':'追加をキャンセルしました。必要になったらブラウザのメニューから追加できます。';}
     catch{$('status').textContent='下の手順でブラウザのメニューから追加してください。';}
@@ -18,5 +18,5 @@
   async function copy(){try{await navigator.clipboard.writeText(url);$('shareStatus').textContent='リンクをコピーしました。相手へのメッセージに貼り付けてください。';}catch{$('shareStatus').textContent='下のリンクを長押ししてコピーしてください。';}}
   $('copyLink').onclick=copy;
   $('shareLink').onclick=async()=>{if(!navigator.share){await copy();return;}try{await navigator.share({title:'韓国語アプリ',url});}catch(e){if(e.name!=='AbortError')await copy();}};
-  if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js?v=3401',{updateViaCache:'none'}).catch(()=>{$('status').textContent='アプリの準備に失敗しました。通信を確認してページを開き直してください。';});
+  if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js?v=3501',{updateViaCache:'none'}).catch(()=>{$('status').textContent='アプリの準備に失敗しました。通信を確認してページを開き直してください。';});
 })();
