@@ -99,13 +99,7 @@
     }
     function setFeedback(text){feedback.textContent=text;feedback.style.display='block';}
     function appSay(text,voiceIndex=0,onend){
-      if(!('speechSynthesis' in window)){if(onend)onend();return;}
-      const u=new SpeechSynthesisUtterance(text||'');
-      u.lang='ko-KR';u.rate=.84;
-      const vs=speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang));
-      if(vs.length)u.voice=vs[voiceIndex%vs.length];
-      u.onend=()=>{if(onend)onend()};
-      speechSynthesis.speak(u);
+      window.KorSpeech.speak(text,voiceIndex,onend);
     }
     function score(a,b){
       const norm=s=>String(s||'').replace(/[\s.?!？！。、]/g,'');
@@ -125,7 +119,7 @@
         const sc=score(heard,target);
         const msg=sc>=90?'かなり近いです。':sc>=75?'よく伝わる発音です。':sc>=55?'もう少しゆっくり区切ってみましょう。':'お手本を聞いてから、短く区切ってもう一度試してみましょう。';
         setFeedback(role+'：一致度 '+sc+'%　聞き取り「'+heard+'」　'+msg);
-        if(after)setTimeout(after,500);
+        if(after)after();
       };
       r.onerror=()=>setFeedback('聞き取れませんでした。もう一度「会話を始める」を押してください。');
       r.start();
@@ -144,7 +138,7 @@
 
     convBtn.onclick=()=>{
       const x=currentLesson();if(!x)return;
-      if('speechSynthesis' in window)speechSynthesis.cancel();
+      window.KorSpeech.cancel();
       const m=select.value;
       feedback.style.display='none';
       if(m==='app'){
@@ -153,7 +147,7 @@
         listenUser(x[5],'A',()=>appSay(x[6],1));
       }else{
         setFeedback('まずAを聞いてください。続いてBを話します。');
-        appSay(x[5],0,()=>setTimeout(()=>listenUser(x[6],'B'),350));
+        appSay(x[5],0,()=>listenUser(x[6],'B'));
       }
     };
   });
