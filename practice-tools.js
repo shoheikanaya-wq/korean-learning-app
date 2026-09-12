@@ -93,8 +93,15 @@
     const canvas=$('writebox'), guide=$('traceGuide');if(!canvas||!guide)return;
     const ctx=canvas.getContext('2d'),g=guide.getContext('2d');
     const mask=document.createElement('canvas');mask.width=mask.height=320;const m=mask.getContext('2d',{willReadFrequently:true});
+    const options=document.querySelector('.trace-options');
+    const modeLabel=document.createElement('label');
+    modeLabel.innerHTML='練習 <select id="writeMode"><option value="trace">なぞる</option><option value="free">見本なし</option></select>';
+    options?.prepend(modeLabel);
+    const mode=$('writeMode');
+    if(mode)mode.value=read('korWriteMode')||'trace';
     let letters=[], pos=0, strokes=[], active=null, timer, scores=[], hidden=false, completed=false;
     function currentText(){return $('ko').textContent.normalize('NFC');}
+    function freeMode(){return mode?.value==='free';}
     function paint(){
       ctx.clearRect(0,0,320,320);ctx.strokeStyle='#304e72';ctx.fillStyle='#304e72';ctx.lineWidth=13;ctx.lineCap='round';ctx.lineJoin='round';
       for(const points of strokes){if(!points.length)continue;ctx.beginPath();ctx.moveTo(...points[0]);points.slice(1).forEach(p=>ctx.lineTo(...p));ctx.stroke();ctx.beginPath();ctx.arc(...points[0],6.5,0,Math.PI*2);ctx.fill();}
@@ -102,51 +109,52 @@
     function drawGuide(){
       g.clearRect(0,0,320,320);g.strokeStyle='#e2dbd1';g.setLineDash([5,6]);g.beginPath();g.moveTo(160,0);g.lineTo(160,320);g.moveTo(0,160);g.lineTo(320,160);g.stroke();g.setLineDash([]);
       m.clearRect(0,0,320,320);m.font='230px "Noto Sans KR", "Malgun Gothic", sans-serif';m.textAlign='center';m.textBaseline='middle';m.fillStyle='#000';m.fillText(letters[pos]||'',160,176);
-      if(!hidden){g.save();g.globalAlpha=.19;g.drawImage(mask,0,0);g.restore();}
-      $('traceProgress').textContent=letters.length?`${pos+1} / ${letters.length}文字${hidden?'':'　「'+letters[pos]+'」をなぞる'}`:'この文にはなぞる韓国語文字がありません。';
+      const showGuide=!freeMode()&&!hidden;
+      if(showGuide){g.save();g.globalAlpha=.19;g.drawImage(mask,0,0);g.restore();}
+      const task=freeMode()?'見本なしで書く':hidden?'見本を隠して書く':`「${letters[pos]||''}」をなぞる`;
+      $('traceProgress').textContent=letters.length?`${pos+1} / ${letters.length}文字　${task}`:'この文には練習できる韓国語文字がありません。';
       $('tracePrev').disabled=pos===0;$('traceNext').disabled=pos>=letters.length-1;
+      if($('hide')){$('hide').disabled=freeMode();$('hide').textContent=freeMode()?'見本なしモード':'見ないで挑戦';}
     }
     function clear(){clearTimeout(timer);strokes=[];active=null;completed=false;paint();$('writeanswer').classList.remove('show');}
-    function reset(){letters=Array.from(currentText()).filter(x=>/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(x));pos=0;scores=[];hidden=false;$('hide').textContent='見ないで挑戦';clear();drawGuide();}
+    function reset(){letters=Array.from(currentText()).filter(x=>/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(x));pos=0;scores=[];hidden=false;clear();drawGuide();}
     function metrics(){
       const target=m.getImageData(0,0,320,320).data, ink=ctx.getImageData(0,0,320,320).data;
       let total=0,covered=0,written=0,near=0;
       const easy=$('traceLevel').value==='easy';
-      const tolerance=easy?15:8;
+      const tolerance=easy?(freeMode()?22:15):(freeMode()?13:8);
       for(let y=0;y<320;y+=2)for(let x=0;x<320;x+=2){const k=(y*320+x)*4+3;
         if(target[k]>60){total++;if(ink[k]>40)covered++;}
         if(ink[k]>40){written++;let hit=false;for(let dy=-tolerance;dy<=tolerance&&!hit;dy+=3)for(let dx=-tolerance;dx<=tolerance;dx+=3){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<320&&yy>=0&&yy<320&&target[(yy*320+xx)*4+3]>60){hit=true;break;}}if(hit)near++;}
       }
       const coverage=total?covered/total:0,precision=written?near/written:0;
-      const pass=coverage>=(easy?.61:.76)&&precision>=(easy?.72:.82);
+      const pass=freeMode() ? coverage>=(easy?.42:.56)&&precision>=(easy?.58:.70) : coverage>=(easy?.61:.76)&&precision>=(easy?.72:.82);
       return {score:Math.round(100*coverage*precision),coverage,precision,pass,written};
     }
     function show(text){$('writeanswer').textContent=text;$('writeanswer').classList.add('show');}
     function saveWriting(mean){
       try{
         const all=JSON.parse(localStorage.getItem('korWritingStats')||'{}');
-        const text=currentText();const old=all[text]||{};
-        all[text]={attempts:(old.attempts||0)+1,best:Math.max(old.best||0,mean),last:mean,updated:Date.now()};
+        const text=currentText(),kind=freeMode()?'free':'trace',id=text+'|'+kind,old=all[id]||{};
+        all[id]={attempts:(old.attempts||0)+1,best:Math.max(old.best||0,mean),last:mean,mode:kind,updated:Date.now()};
         localStorage.setItem('korWritingStats',JSON.stringify(all));
       }catch{}
     }
     function check(auto=false){
       if(active||completed)return;
-      const result=metrics();if(!result.written){if(!auto)show('まず薄い文字を指でなぞってみましょう。');return;}
+      const result=metrics();if(!result.written){if(!auto)show(freeMode()?'枠の中に1文字書いてみましょう。':'まず薄い文字を指でなぞってみましょう。');return;}
       if(result.pass){
-        scores[pos]=result.score;show(`OK ${result.score}%　次の文字へ進みます。`);
-        if(auto){
-          if(pos<letters.length-1){setTimeout(()=>{pos++;clear();drawGuide();},350);}else{setTimeout(finish,350);}
-        }
+        scores[pos]=result.score;show(`${freeMode()?'書けました':'OK'} ${result.score}%　次の文字へ進みます。`);
+        if(auto){if(pos<letters.length-1){setTimeout(()=>{pos++;clear();drawGuide();},350);}else{setTimeout(finish,350);}}
       }else if(!auto){
-        const hint=result.coverage<.55?'まだなぞれていない部分があります。':result.precision<.7?'線が薄い文字から少し外れています。':'あと少しです。';
-        show(`なぞり ${result.score}%：${hint}`);
+        const hint=result.coverage<.4?'文字の形がまだ足りません。':result.precision<.55?'お手本の形から少し離れています。':'あと少しです。';
+        show(`${freeMode()?'書き方':'なぞり'} ${result.score}%：${hint}`);
       }
     }
     function finish(){
       if(completed)return;completed=true;
       const valid=scores.filter(Number.isFinite),n=valid.length,mean=n?Math.round(valid.reduce((a,b)=>a+b,0)/n):0;
-      saveWriting(mean);show(`全文字できました。${n}/${letters.length}文字　平均 ${mean}%`);
+      saveWriting(mean);show(`全文字できました。${n}/${letters.length}文字　平均 ${mean}%${freeMode()?'（見本なし）':''}`);
     }
     function point(e){const r=canvas.getBoundingClientRect();return [Math.max(0,Math.min(319,(e.clientX-r.left)*320/r.width)),Math.max(0,Math.min(319,(e.clientY-r.top)*320/r.height))];}
     canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary||!letters.length)return;e.preventDefault();clearTimeout(timer);completed=false;active=e.pointerId;canvas.setPointerCapture(active);strokes.push([point(e)]);paint();});
@@ -156,8 +164,9 @@
     $('clear').onclick=clear;$('check').onclick=()=>{check(false);if(pos===letters.length-1&&scores[pos]!=null)finish();};
     $('tracePrev').onclick=()=>{if(pos>0){pos--;clear();drawGuide();}};
     $('traceNext').onclick=()=>{if(pos<letters.length-1){pos++;clear();drawGuide();}};
-    $('hide').onclick=()=>{hidden=!hidden;$('hide').textContent=hidden?'見ながら練習':'見ないで挑戦';drawGuide();};
+    $('hide').onclick=()=>{if(freeMode())return;hidden=!hidden;$('hide').textContent=hidden?'見ながら練習':'見ないで挑戦';drawGuide();};
     $('traceAuto').onchange=()=>clearTimeout(timer);
+    if(mode)mode.onchange=()=>{save('korWriteMode',mode.value);hidden=false;clear();drawGuide();};
     window.KorTrace={reset};reset();document.fonts?.ready.then(()=>drawGuide());
   });
 })();
