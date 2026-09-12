@@ -9,12 +9,13 @@
     const all = window.speechSynthesis?.getVoices() || [];
     return [...new Map(all.filter(v => /^ko(?:[-_]|$)/i.test(v.lang)).map(v => [v.voiceURI, v])).values()];
   };
-  // Web Speech has no standard gender field; prefer known female names, let listeners choose.
   const preferred = list => [...list].sort((a,b) => Number(/SunHi|JiMin|YuJin|SeoHyeon|SoonBok|Heami|female|여성/i.test(b.name)) - Number(/SunHi|JiMin|YuJin|SeoHyeon|SoonBok|Heami|female|여성/i.test(a.name)));
   function profile(role) {
     const list = preferred(koreanVoices());
     const chosen = list.find(v => v.voiceURI === read('korVoice'+role));
-    return {voice: chosen || list[role] || list[0], pitch: role ? 1.3 : .95, rate: role ? .92 : .8};
+    const voice = chosen || list[role] || list[0];
+    // Keep pitch close to natural voice ranges. Large pitch shifts can produce wavering/robotic playback on Android TTS.
+    return role ? {voice, pitch:1.08, rate:.90} : {voice, pitch:.98, rate:.86};
   }
   function cancel() {
     token++;
@@ -28,19 +29,23 @@
       return;
     }
     const run=token, p=profile(role), u=new SpeechSynthesisUtterance(text || '');
-    u.lang='ko-KR'; u.pitch=p.pitch; u.rate=p.rate;
+    u.lang='ko-KR'; u.pitch=p.pitch; u.rate=p.rate; u.volume=1;
     if(p.voice)u.voice=p.voice;
     const bubble=document.querySelectorAll('.bubble')[role];
     u.onstart=()=>{if(run===token)bubble?.classList.add('speaking');};
-    u.onend=()=>{bubble?.classList.remove('speaking'); if(run===token && after)after();};
+    u.onend=()=>{
+      bubble?.classList.remove('speaking');
+      // Give Android TTS a short release gap before switching speakers. This avoids clipped/wavering starts.
+      if(run===token && after)setTimeout(()=>{if(run===token)after();},220);
+    };
     u.onerror=()=>{bubble?.classList.remove('speaking');if(run===token && feedback){feedback.textContent='音声を再生できませんでした。通信と端末の韓国語音声を確認して、もう一度お試しください。';feedback.style.display='block';}};
-    speechSynthesis.speak(u);
+    window.speechSynthesis.speak(u);
   }
   window.KorSpeech={speak,cancel};
   document.addEventListener('DOMContentLoaded',()=>{
     const mini=document.querySelector('.mini');
     const details=document.createElement('details');details.className='voice-settings';
-    details.innerHTML='<summary>A・Bの声を選ぶ・試す</summary><p class="voice-note">Aは落ち着いた声、Bは明るい声。試聴して聞き分けやすい組み合わせを選べます。</p><label>Aの音声<select id="voiceA"></select></label><label>Bの音声<select id="voiceB"></select></label><div class="voice-tests"><button id="testA">Aを試聴</button><button id="testB">Bを試聴</button></div><p id="voiceStatus" class="voice-note" role="status"></p>';
+    details.innerHTML='<summary>A・Bの声を選ぶ・試す</summary><p class="voice-note">Aは落ち着いた声、Bは明るい声。声質を極端に加工せず、自然に聞こえる設定です。</p><label>Aの音声<select id="voiceA"></select></label><label>Bの音声<select id="voiceB"></select></label><div class="voice-tests"><button id="testA">Aを試聴</button><button id="testB">Bを試聴</button></div><p id="voiceStatus" class="voice-note" role="status"></p>';
     mini?.append(details);
     function refresh(){
       const list=preferred(koreanVoices());
@@ -53,10 +58,10 @@
     }
     function status(){
       const list=koreanVoices(), a=profile(0).voice,b=profile(1).voice;
-      $('voiceStatus').textContent=!list.length?'韓国語音声を取得できていません。端末の標準音声を使います。':a?.voiceURI===b?.voiceURI?'同じ音声を高さ・速さで変えています。女性2人の別音声になるかは端末の音声と試聴で確認してください。':'AとBに別の音声を設定しています。女性の声かどうかは試聴して確認してください。';
+      $('voiceStatus').textContent=!list.length?'韓国語音声を取得できていません。端末の標準音声を使います。':a?.voiceURI===b?.voiceURI?'同じ音声エンジンを使っています。揺れを防ぐため加工差を小さくしています。':'AとBに別の韓国語音声を設定しています。';
     }
     refresh();window.speechSynthesis?.addEventListener('voiceschanged',refresh);
-    ['testA','testB'].forEach((id,role)=>$(id).onclick=()=>{cancel();speak('안녕하세요. 만나서 반가워요.',role);});
+    ['testA','testB'].forEach((id,role)=>$(id).onclick=()=>{cancel();setTimeout(()=>speak('안녕하세요. 만나서 반가워요.',role),80);});
     document.addEventListener('click',e=>{if(e.target.closest('#homeBtn,#prev,#next,#topPrev,#topNext,#listen,#slow,[data-start],[data-c]'))cancel();},true);
     $('scene')?.addEventListener('change',cancel);
     document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel();});
