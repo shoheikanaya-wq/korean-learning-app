@@ -23,9 +23,8 @@
   function profile(role) {
     const {a,b}=voicePair();
     const voice=role?b:a;
-    const distinct=a&&b&&a.voiceURI!==b.voiceURI;
-    // Use the voice itself for character; avoid pitch-shifting because some Android TTS engines can sound shaky.
-    return role ? {voice, pitch:1, rate:distinct?.94:.93} : {voice, pitch:1, rate:.87};
+    const distinct=!!(a&&b&&a.voiceURI!==b.voiceURI);
+    return role ? {voice, pitch:1, rate:distinct ? .94 : .93} : {voice, pitch:1, rate:.87};
   }
   function setBusy(on){
     speaking=on;
@@ -52,12 +51,7 @@
     u.onend=()=>{
       bubble?.classList.remove('speaking');
       if(run!==token)return;
-      if(after){
-        // Android TTS needs a short release gap when switching voices.
-        setTimeout(()=>{if(run===token)after();},320);
-      }else{
-        speaking=false;setBusy(false);
-      }
+      if(after){setTimeout(()=>{if(run===token)after();},320);}else{speaking=false;setBusy(false);}
     };
     u.onerror=()=>{
       bubble?.classList.remove('speaking');speaking=false;setBusy(false);
@@ -117,26 +111,47 @@
     function metrics(){
       const target=m.getImageData(0,0,320,320).data, ink=ctx.getImageData(0,0,320,320).data;
       let total=0,covered=0,written=0,near=0;
-      const tolerance=$('traceLevel').value==='easy'?12:7;
+      const easy=$('traceLevel').value==='easy';
+      const tolerance=easy?15:8;
       for(let y=0;y<320;y+=2)for(let x=0;x<320;x+=2){const k=(y*320+x)*4+3;
         if(target[k]>60){total++;if(ink[k]>40)covered++;}
         if(ink[k]>40){written++;let hit=false;for(let dy=-tolerance;dy<=tolerance&&!hit;dy+=3)for(let dx=-tolerance;dx<=tolerance;dx+=3){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<320&&yy>=0&&yy<320&&target[(yy*320+xx)*4+3]>60){hit=true;break;}}if(hit)near++;}
       }
       const coverage=total?covered/total:0,precision=written?near/written:0;
-      return {score:Math.round(100*coverage*precision),pass:coverage>=($('traceLevel').value==='easy'?.67:.8)&&precision>=.8,written};
+      const pass=coverage>=(easy?.61:.76)&&precision>=(easy?.72:.82);
+      return {score:Math.round(100*coverage*precision),coverage,precision,pass,written};
     }
     function show(text){$('writeanswer').textContent=text;$('writeanswer').classList.add('show');}
+    function saveWriting(mean){
+      try{
+        const all=JSON.parse(localStorage.getItem('korWritingStats')||'{}');
+        const text=currentText();const old=all[text]||{};
+        all[text]={attempts:(old.attempts||0)+1,best:Math.max(old.best||0,mean),last:mean,updated:Date.now()};
+        localStorage.setItem('korWritingStats',JSON.stringify(all));
+      }catch{}
+    }
     function check(auto=false){
       if(active||completed)return;
       const result=metrics();if(!result.written){if(!auto)show('まず薄い文字を指でなぞってみましょう。');return;}
-      if(result.pass){scores[pos]=result.score;show('なぞれました！');if(auto){if(pos<letters.length-1){pos++;clear();drawGuide();}else finish();}}
-      else if(!auto)show(`なぞりの目安 ${result.score}%：薄い文字の残っている部分をなぞってみましょう。文字認識や書き順の採点ではありません。`);
+      if(result.pass){
+        scores[pos]=result.score;show(`OK ${result.score}%　次の文字へ進みます。`);
+        if(auto){
+          if(pos<letters.length-1){setTimeout(()=>{pos++;clear();drawGuide();},350);}else{setTimeout(finish,350);}
+        }
+      }else if(!auto){
+        const hint=result.coverage<.55?'まだなぞれていない部分があります。':result.precision<.7?'線が薄い文字から少し外れています。':'あと少しです。';
+        show(`なぞり ${result.score}%：${hint}`);
+      }
     }
-    function finish(){completed=true;const n=scores.filter(Number.isFinite).length;const mean=n?Math.round(scores.filter(Number.isFinite).reduce((a,b)=>a+b,0)/n):0;show(`全文字の練習が終わりました。答え：${currentText()}　なぞれた文字 ${n}/${letters.length}、なぞりの平均 ${mean}%。文字認識・書き順の採点ではありません。`);}
+    function finish(){
+      if(completed)return;completed=true;
+      const valid=scores.filter(Number.isFinite),n=valid.length,mean=n?Math.round(valid.reduce((a,b)=>a+b,0)/n):0;
+      saveWriting(mean);show(`全文字できました。${n}/${letters.length}文字　平均 ${mean}%`);
+    }
     function point(e){const r=canvas.getBoundingClientRect();return [Math.max(0,Math.min(319,(e.clientX-r.left)*320/r.width)),Math.max(0,Math.min(319,(e.clientY-r.top)*320/r.height))];}
     canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary||!letters.length)return;e.preventDefault();clearTimeout(timer);completed=false;active=e.pointerId;canvas.setPointerCapture(active);strokes.push([point(e)]);paint();});
     canvas.addEventListener('pointermove',e=>{if(active!==e.pointerId)return;e.preventDefault();strokes[strokes.length-1].push(point(e));paint();});
-    const end=e=>{if(active!==e.pointerId)return;active=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(e.type==='pointerup'&&$('traceAuto').checked)timer=setTimeout(()=>check(true),1100);};
+    const end=e=>{if(active!==e.pointerId)return;active=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(e.type==='pointerup'&&$('traceAuto').checked)timer=setTimeout(()=>check(true),650);};
     canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
     $('clear').onclick=clear;$('check').onclick=()=>{check(false);if(pos===letters.length-1&&scores[pos]!=null)finish();};
     $('tracePrev').onclick=()=>{if(pos>0){pos--;clear();drawGuide();}};
