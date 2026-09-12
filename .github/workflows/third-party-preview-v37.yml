@@ -1,0 +1,54 @@
+name: Prepare Korean preview v3.7
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/third-party-preview-v37.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine third-party learning flow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('<span class="version">Ver.3.6</span>','<span class="version">Ver.3.7</span>')
+          s=s.replace('<div>Ver.3.6</div><div>Personal Korean Learning Project</div>','<div>Ver.3.7</div><div>Personal Korean Learning Project</div>')
+          s=s.replace('<div>Ver.3.6　学習画面に集中する構成へ整理</div>','<div>Ver.3.7　第三者試用向けに学習動線・表示を整理</div><div>Ver.3.6　学習画面に集中する構成へ整理</div>')
+          # Hide advanced voice selection from normal learners while retaining automatic A/B profiles.
+          s=s.replace('.voice-settings{margin:12px 0;padding:10px;', '.voice-settings{display:none;margin:12px 0;padding:10px;')
+          # Remove obsolete install styling from the learning-only page.
+          start='.installbar{display:grid;gap:8px;margin:8px 0 14px}.installlink,.installbar button{display:block;text-align:center;padding:15px 10px;min-height:56px;border:2px solid #65584d;border-radius:14px;font-size:18px;font-weight:800}.installlink{background:#65584d;color:white;text-decoration:none}'
+          s=s.replace(start,'')
+          # Make the core lesson actions easier to tap/read on a phone.
+          s=s.replace('</style></head>','''\n/* Ver.3.7 third-party preview: core learning first */\n@media(max-width:520px){\n  header{margin-bottom:8px}h1{font-size:23px}.version{font-size:12px}\n  .category{min-height:96px;padding:16px}.category strong{font-size:23px}.category span{font-size:17px}\n  .listenrow button,.actions button,.nav button{min-height:60px;font-size:19px}\n  .ko{font-size:42px!important}.ja{font-size:23px!important}\n  .writeguide,.voice-note{font-size:16px}\n  #traceProgress{font-size:19px}\n}\n</style></head>''')
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js');t=sw.read_text(encoding='utf-8')
+          t=t.replace("const CACHE='kor-practice-v17';","const CACHE='kor-practice-v18';")
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.3.7' index.html
+          grep -q 'third-party preview' index.html
+          grep -q '.voice-settings{display:none' index.html
+          grep -q 'id="listen"' index.html
+          grep -q 'id="speak"' index.html
+          grep -q 'id="writebox"' index.html
+          grep -q 'id="conv"' index.html
+          ! grep -q 'このスマホにインストール' index.html
+          ! grep -q '人にアプリを渡す' index.html
+          grep -q "kor-practice-v18" sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Prepare Ver.3.7 for third-party preview'
+          git push
