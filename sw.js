@@ -1,4 +1,4 @@
-const CACHE='kor-practice-v17';
+const CACHE='kor-practice-v18';
 const SHELL=['./','./index.html','./lessons.js?v=3501','./lessons-extra.js?v=3501','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./practice-tools.js?v=3501'];
 
 self.addEventListener('install',event=>{
