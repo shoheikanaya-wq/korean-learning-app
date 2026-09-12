@@ -16,7 +16,8 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           p=Path('index.html'); s=p.read_text(encoding='utf-8')
-          s=s.replace('Ver.3.7','Ver.3.8')
+          # Ver.3.8: promote only the current app version; preserve old history entries.
+          s=s.replace('<span class="version">Ver.3.7</span>','<span class="version">Ver.3.8</span>')
           marker='</style></head>'
           css='''
 /* Ver.3.8: readable katakana accent — size + vertical pitch + arrows */
@@ -40,14 +41,18 @@ jobs:
  .pron .mora .pitch-arrow{top:-23px!important;font-size:18px!important}
 }
 '''
-          s=s.replace(marker,css+marker)
-          s=s.replace('<div>Ver.3.7　第三者試用向けに学習動線・表示を整理</div>','<div>Ver.3.8　カタカナを大小＋上下位置＋矢印で抑揚表示</div><div>Ver.3.7　第三者試用向けに学習動線・表示を整理</div>')
+          if 'Ver.3.8: readable katakana accent' not in s:
+              s=s.replace(marker,css+marker)
+          old='<div>Ver.3.7　第三者試用向けに学習動線・表示を整理</div>'
+          new='<div>Ver.3.8　カタカナを大小＋上下位置＋矢印で抑揚表示</div>'+old
+          if 'カタカナを大小＋上下位置＋矢印で抑揚表示' not in s:
+              s=s.replace(old,new)
           p.write_text(s,encoding='utf-8')
           sw=Path('sw.js'); t=sw.read_text(encoding='utf-8').replace("const CACHE='kor-practice-v18';","const CACHE='kor-practice-v19';"); sw.write_text(t,encoding='utf-8')
           PY
       - name: Verify
         run: |
-          grep -q 'Ver.3.8' index.html
+          grep -q '<span class="version">Ver.3.8</span>' index.html
           grep -q 'readable katakana accent' index.html
           grep -q 'prosody-high' index.html
           grep -q 'prosody-low' index.html
