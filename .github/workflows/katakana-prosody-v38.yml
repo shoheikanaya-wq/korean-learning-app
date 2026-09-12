@@ -1,0 +1,62 @@
+name: Restore readable katakana prosody v3.8
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/katakana-prosody-v38.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore large-small katakana with pitch movement
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=s.replace('Ver.3.7','Ver.3.8')
+          marker='</style></head>'
+          css='''
+/* Ver.3.8: readable katakana accent — size + vertical pitch + arrows */
+.pronwrap{padding:18px 8px 10px!important;overflow:visible}
+.pron{align-items:center!important;min-height:108px!important;padding-top:30px!important;gap:5px!important;overflow:visible!important}
+.pron .mora{font-size:38px!important;line-height:1!important;transition:transform .15s ease,font-size .15s ease!important}
+.pron .mora.prosody-high{font-size:46px!important;transform:translateY(-10px)!important;font-weight:950!important}
+.pron .mora.prosody-low{font-size:30px!important;transform:translateY(9px)!important;font-weight:800!important}
+.pron .mora.prosody-rise{font-size:42px!important;transform:translateY(-6px)!important;font-weight:950!important}
+.pron .mora.prosody-fall{font-size:34px!important;transform:translateY(6px)!important;font-weight:850!important}
+.pron .mora.prosody-flat{font-size:38px!important;transform:translateY(0)!important}
+.pron .mora .pitch-arrow{top:-25px!important;font-size:20px!important;font-weight:950!important}
+@media(max-width:520px){
+ .pron{min-height:100px!important;padding-top:28px!important;gap:4px!important}
+ .pron .mora{font-size:34px!important}
+ .pron .mora.prosody-high{font-size:42px!important;transform:translateY(-9px)!important}
+ .pron .mora.prosody-low{font-size:27px!important;transform:translateY(8px)!important}
+ .pron .mora.prosody-rise{font-size:38px!important;transform:translateY(-5px)!important}
+ .pron .mora.prosody-fall{font-size:30px!important;transform:translateY(5px)!important}
+ .pron .mora.prosody-flat{font-size:34px!important}
+ .pron .mora .pitch-arrow{top:-23px!important;font-size:18px!important}
+}
+'''
+          s=s.replace(marker,css+marker)
+          s=s.replace('<div>Ver.3.7　第三者試用向けに学習動線・表示を整理</div>','<div>Ver.3.8　カタカナを大小＋上下位置＋矢印で抑揚表示</div><div>Ver.3.7　第三者試用向けに学習動線・表示を整理</div>')
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js'); t=sw.read_text(encoding='utf-8').replace("const CACHE='kor-practice-v18';","const CACHE='kor-practice-v19';"); sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'Ver.3.8' index.html
+          grep -q 'readable katakana accent' index.html
+          grep -q 'prosody-high' index.html
+          grep -q 'prosody-low' index.html
+          grep -q 'pitch-arrow' index.html
+          grep -q "kor-practice-v19" sw.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Restore large-small katakana prosody in Ver.3.8'
+          git push
