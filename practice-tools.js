@@ -118,17 +118,49 @@
     }
     function clear(){clearTimeout(timer);strokes=[];active=null;completed=false;paint();$('writeanswer').classList.remove('show');}
     function reset(){letters=Array.from(currentText()).filter(x=>/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(x));pos=0;scores=[];hidden=false;clear();drawGuide();}
+    function bbox(data,threshold=40){
+      let minX=320,minY=320,maxX=-1,maxY=-1,count=0;
+      for(let y=0;y<320;y+=2)for(let x=0;x<320;x+=2){const a=data[(y*320+x)*4+3];if(a>threshold){count++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
+      return count?{minX,minY,maxX,maxY,w:Math.max(1,maxX-minX+1),h:Math.max(1,maxY-minY+1),count}:null;
+    }
+    function normalizedFreeMetrics(target,ink,easy){
+      const tb=bbox(target,60), ib=bbox(ink,40);
+      if(!ib)return {score:0,coverage:0,precision:0,pass:false,written:0,shape:0};
+      if(!tb)return {score:0,coverage:0,precision:0,pass:false,written:ib.count,shape:0};
+      const N=64, tg=new Uint8Array(N*N), ig=new Uint8Array(N*N);
+      function fillGrid(src,b,grid,threshold){
+        for(let gy=0;gy<N;gy++)for(let gx=0;gx<N;gx++){
+          const x=Math.round(b.minX+(gx/(N-1))*b.w),y=Math.round(b.minY+(gy/(N-1))*b.h);
+          let hit=0;
+          for(let dy=-2;dy<=2&&!hit;dy+=2)for(let dx=-2;dx<=2;dx+=2){const xx=Math.max(0,Math.min(319,x+dx)),yy=Math.max(0,Math.min(319,y+dy));if(src[(yy*320+xx)*4+3]>threshold){hit=1;break;}}
+          grid[gy*N+gx]=hit;
+        }
+      }
+      fillGrid(target,tb,tg,60);fillGrid(ink,ib,ig,40);
+      const tol=easy?5:3;let targetN=0,inkN=0,covered=0,near=0;
+      for(let gy=0;gy<N;gy++)for(let gx=0;gx<N;gx++){
+        const k=gy*N+gx;if(tg[k]){targetN++;let hit=false;for(let dy=-tol;dy<=tol&&!hit;dy++)for(let dx=-tol;dx<=tol;dx++){const xx=gx+dx,yy=gy+dy;if(xx>=0&&xx<N&&yy>=0&&yy<N&&ig[yy*N+xx]){hit=true;break;}}if(hit)covered++;}
+        if(ig[k]){inkN++;let hit=false;for(let dy=-tol;dy<=tol&&!hit;dy++)for(let dx=-tol;dx<=tol;dx++){const xx=gx+dx,yy=gy+dy;if(xx>=0&&xx<N&&yy>=0&&yy<N&&tg[yy*N+xx]){hit=true;break;}}if(hit)near++;}
+      }
+      const coverage=targetN?covered/targetN:0,precision=inkN?near/inkN:0;
+      const ratioPenalty=Math.min(tb.w/ib.w,ib.w/tb.w,tb.h/ib.h,ib.h/tb.h);
+      const shape=coverage*precision;
+      const score=Math.round(100*shape*(.75+.25*ratioPenalty));
+      const pass=coverage>=(easy?.58:.68)&&precision>=(easy?.62:.72)&&ratioPenalty>=(easy?.48:.62);
+      return {score,coverage,precision,pass,written:ib.count,shape,ratioPenalty};
+    }
     function metrics(){
       const target=m.getImageData(0,0,320,320).data, ink=ctx.getImageData(0,0,320,320).data;
-      let total=0,covered=0,written=0,near=0;
       const easy=$('traceLevel').value==='easy';
-      const tolerance=easy?(freeMode()?22:15):(freeMode()?13:8);
+      if(freeMode())return normalizedFreeMetrics(target,ink,easy);
+      let total=0,covered=0,written=0,near=0;
+      const tolerance=easy?15:8;
       for(let y=0;y<320;y+=2)for(let x=0;x<320;x+=2){const k=(y*320+x)*4+3;
         if(target[k]>60){total++;if(ink[k]>40)covered++;}
         if(ink[k]>40){written++;let hit=false;for(let dy=-tolerance;dy<=tolerance&&!hit;dy+=3)for(let dx=-tolerance;dx<=tolerance;dx+=3){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<320&&yy>=0&&yy<320&&target[(yy*320+xx)*4+3]>60){hit=true;break;}}if(hit)near++;}
       }
       const coverage=total?covered/total:0,precision=written?near/written:0;
-      const pass=freeMode() ? coverage>=(easy?.42:.56)&&precision>=(easy?.58:.70) : coverage>=(easy?.61:.76)&&precision>=(easy?.72:.82);
+      const pass=coverage>=(easy?.61:.76)&&precision>=(easy?.72:.82);
       return {score:Math.round(100*coverage*precision),coverage,precision,pass,written};
     }
     function show(text){$('writeanswer').textContent=text;$('writeanswer').classList.add('show');}
@@ -147,7 +179,11 @@
         scores[pos]=result.score;show(`${freeMode()?'書けました':'OK'} ${result.score}%　次の文字へ進みます。`);
         if(auto){if(pos<letters.length-1){setTimeout(()=>{pos++;clear();drawGuide();},350);}else{setTimeout(finish,350);}}
       }else if(!auto){
-        const hint=result.coverage<.4?'文字の形がまだ足りません。':result.precision<.55?'お手本の形から少し離れています。':'あと少しです。';
+        let hint;
+        if(freeMode()&&result.ratioPenalty<.55)hint='文字の縦横バランスを見本に近づけてみましょう。';
+        else if(result.coverage<.5)hint='文字の形がまだ足りません。';
+        else if(result.precision<.6)hint='線の位置を少し整えてみましょう。';
+        else hint='あと少しです。';
         show(`${freeMode()?'書き方':'なぞり'} ${result.score}%：${hint}`);
       }
     }
