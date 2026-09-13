@@ -2,6 +2,34 @@
   const X=window.LESSONS||(window.LESSONS={daily:[],travel:[],business:[]});
   X.daily=X.daily||[];X.travel=X.travel||[];X.business=X.business||[];
 
+  X.daily.push(
+    ['朝のあいさつ','잘 잤어요?','チャル ジャッソヨ','→ ↗','よく眠れましたか？','잘 잤어요?','네, 잘 잤어요.'],
+    ['朝ごはん','아침 먹었어요?','アチム モゴッソヨ','→ ↗','朝ごはん食べましたか？','아침 먹었어요?','네, 먹었어요.'],
+    ['行ってきます','다녀올게요.','タニョオルッケヨ','→ ↘','行ってきます。','다녀올게요.','잘 다녀와요.'],
+    ['ただいま','다녀왔어요.','タニョワッソヨ','→ ↘','ただいま。','다녀왔어요.','어서 와요.'],
+    ['お腹すいた','배고파요.','ペゴパヨ','→ ↘','お腹がすきました。','배고파요.','뭐 먹을까요?'],
+    ['のどが渇いた','목말라요.','モンマルラヨ','→ ↘','のどが渇きました。','목말라요.','물 드릴까요?'],
+    ['おいしい','정말 맛있어요.','チョンマル マシッソヨ','→ ↘','本当においしいです。','정말 맛있어요.','많이 드세요.'],
+    ['少しください','조금만 주세요.','チョグムマン ジュセヨ','→ ↘','少しだけください。','조금만 주세요.','네, 조금만 드릴게요.'],
+    ['もう十分','이제 됐어요.','イジェ トェッソヨ','→ ↘','もう大丈夫です。','이제 됐어요.','네, 알겠어요.'],
+    ['暑い','너무 더워요.','ノム トウォヨ','→ ↘','とても暑いです。','너무 더워요.','에어컨 켤까요?'],
+    ['寒い','조금 추워요.','チョグム チュウォヨ','→ ↘','少し寒いです。','조금 추워요.','창문 닫을까요?'],
+    ['眠い','좀 졸려요.','チョム チョルリョヨ','→ ↘','ちょっと眠いです。','좀 졸려요.','조금 쉬세요.'],
+    ['疲れた','오늘 좀 피곤해요.','オヌル チョム ピゴネヨ','→ ↘','今日は少し疲れています。','오늘 좀 피곤해요.','푹 쉬세요.'],
+    ['どこ行く','어디 가요?','オディ ガヨ','→ ↗','どこへ行きますか？','어디 가요?','마트에 가요.'],
+    ['いつ帰る','몇 시에 와요?','ミョッ シエ ワヨ','→ ↗','何時に帰りますか？','몇 시에 와요?','여섯 시쯤 와요.'],
+    ['今向かう','지금 가고 있어요.','チグム カゴ イッソヨ','→ ↘','今向かっています。','지금 가고 있어요.','네, 기다릴게요.'],
+    ['遅れます','조금 늦을 것 같아요.','チョグム ヌジュル コッ カタヨ','→ ↘','少し遅れそうです。','조금 늦을 것 같아요.','천천히 오세요.'],
+    ['連絡して','도착하면 연락해 주세요.','トチャカミョン ヨルラケ ジュセヨ','→ → ↘','着いたら連絡してください。','도착하면 연락해 주세요.','네, 연락할게요.'],
+    ['今どこ','지금 어디예요?','チグム オディエヨ','→ ↗','今どこですか？','지금 어디예요?','집 앞이에요.'],
+    ['一緒に食べる','같이 먹어요.','カチ モゴヨ','→ ↘','一緒に食べましょう。','같이 먹어요.','좋아요.'],
+    ['ちょっと休む','조금 쉬었다 해요.','チョグム シオッタ ヘヨ','→ ↘','少し休んでからしましょう。','조금 쉬었다 해요.','네, 좋아요.'],
+    ['気をつけて','조심해서 가세요.','チョシメソ カセヨ','→ ↘','気をつけて行ってください。','조심해서 가세요.','네, 고마워요.'],
+    ['心配しないで','걱정하지 마세요.','コクチョンハジ マセヨ','→ ↘','心配しないでください。','걱정하지 마세요.','네, 알겠어요.'],
+    ['本当ですか','정말이에요?','チョンマリエヨ','→ ↗','本当ですか？','정말이에요?','네, 정말이에요.'],
+    ['楽しかった','정말 재미있었어요.','チョンマル チェミイッソッソヨ','→ ↘','本当に楽しかったです。','정말 재미있었어요.','저도 즐거웠어요.']
+  );
+
   X.travel.push(
     ['空港・搭乗口','탑승구가 어디예요?','タプッスングガ オディエヨ','↴ → 〜 ↗','搭乗口はどこですか？','탑승구가 어디예요?','저쪽 끝에 있어요.'],
     ['空港・搭乗時間','몇 시에 탑승해요?','ミョッ シエ タプッスンヘヨ','↗ → 〜 ↗','何時に搭乗しますか？','몇 시에 탑승해요?','오후 세 시부터 탑승해요.'],
@@ -99,57 +127,11 @@
       return (window.LESSONS?.[cat]||[])[idx];
     }
     function setFeedback(text){feedback.textContent=text;feedback.style.display='block';}
-    function appSay(text,voiceIndex=0,onend){
-      window.KorSpeech.speak(text,voiceIndex,onend);
-    }
-    function score(a,b){
-      const norm=s=>String(s||'').replace(/[\s.?!？！。、]/g,'');
-      a=norm(a);b=norm(b);if(!a||!b)return 0;
-      const m=Array.from({length:b.length+1},(_,r)=>[r]);
-      for(let j=0;j<=a.length;j++)m[0][j]=j;
-      for(let r=1;r<=b.length;r++)for(let j=1;j<=a.length;j++)m[r][j]=b[r-1]===a[j-1]?m[r-1][j-1]:1+Math.min(m[r-1][j-1],m[r][j-1],m[r-1][j]);
-      return Math.max(0,Math.round((1-m[b.length][a.length]/Math.max(a.length,b.length))*100));
-    }
-    function listenUser(target,role,after){
-      const R=window.SpeechRecognition||window.webkitSpeechRecognition;
-      if(!R){setFeedback('この端末では音声認識が使えません。AもBもアプリが話すモードは利用できます。');return;}
-      const r=new R();r.lang='ko-KR';r.interimResults=false;r.maxAlternatives=1;
-      setFeedback(role+'を話してください…');
-      r.onresult=e=>{
-        const heard=e.results[0][0].transcript;
-        const sc=score(heard,target);
-        const msg=sc>=90?'かなり近いです。':sc>=75?'よく伝わる発音です。':sc>=55?'もう少しゆっくり区切ってみましょう。':'お手本を聞いてから、短く区切ってもう一度試してみましょう。';
-        setFeedback(role+'：一致度 '+sc+'%　聞き取り「'+heard+'」　'+msg);
-        if(after)after();
-      };
-      r.onerror=()=>setFeedback('聞き取れませんでした。もう一度「会話を始める」を押してください。');
-      r.start();
-    }
-    function updateMode(){
-      const m=select.value;
-      if(m==='app'){note.textContent='聞き取り練習：AとBの両方をアプリが読みます。';convBtn.textContent='▶ A・Bの会話を聞く';}
-      if(m==='userA'){note.textContent='あなたがAを話すと、アプリがBで返答します。';convBtn.textContent='🎤 私がAを話して会話';}
-      if(m==='userB'){note.textContent='アプリがAを話したあと、あなたがBで返答します。';convBtn.textContent='🎤 私がBを話して会話';}
-      feedback.style.display='none';
-      localStorage.setItem('korConvMode',m);
-    }
-    select.value=localStorage.getItem('korConvMode')||'app';
-    select.onchange=updateMode;
-    updateMode();
-
-    convBtn.onclick=()=>{
-      const x=currentLesson();if(!x)return;
-      window.KorSpeech.cancel();
-      const m=select.value;
-      feedback.style.display='none';
-      if(m==='app'){
-        appSay(x[5],0,()=>appSay(x[6],1));
-      }else if(m==='userA'){
-        listenUser(x[5],'A',()=>appSay(x[6],1));
-      }else{
-        setFeedback('まずAを聞いてください。続いてBを話します。');
-        appSay(x[5],0,()=>listenUser(x[6],'B'));
-      }
-    };
+    function appSay(text,voiceIndex=0,onend){window.KorSpeech.speak(text,voiceIndex,onend);}
+    function score(a,b){const norm=s=>String(s||'').replace(/[\s.?!？！。、]/g,'');a=norm(a);b=norm(b);if(!a||!b)return 0;const m=Array.from({length:b.length+1},(_,r)=>[r]);for(let j=0;j<=a.length;j++)m[0][j]=j;for(let r=1;r<=b.length;r++)for(let j=1;j<=a.length;j++)m[r][j]=b[r-1]===a[j-1]?m[r-1][j-1]:1+Math.min(m[r-1][j-1],m[r][j-1],m[r-1][j]);return Math.max(0,Math.round((1-m[b.length][a.length]/Math.max(a.length,b.length))*100));}
+    function listenUser(target,role,after){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){setFeedback('この端末では音声認識が使えません。AもBもアプリが話すモードは利用できます。');return;}const r=new R();r.lang='ko-KR';r.interimResults=false;r.maxAlternatives=1;setFeedback(role+'を話してください…');r.onresult=e=>{const heard=e.results[0][0].transcript;const sc=score(heard,target);const msg=sc>=90?'かなり近いです。':sc>=75?'よく伝わる発音です。':sc>=55?'もう少しゆっくり区切ってみましょう。':'お手本を聞いてから、短く区切ってもう一度試してみましょう。';setFeedback(role+'：一致度 '+sc+'%　聞き取り「'+heard+'」　'+msg);if(after)after();};r.onerror=()=>setFeedback('聞き取れませんでした。もう一度「会話を始める」を押してください。');r.start();}
+    function updateMode(){const m=select.value;if(m==='app'){note.textContent='聞き取り練習：AとBの両方をアプリが読みます。';convBtn.textContent='▶ A・Bの会話を聞く';}if(m==='userA'){note.textContent='あなたがAを話すと、アプリがBで返答します。';convBtn.textContent='🎤 私がAを話して会話';}if(m==='userB'){note.textContent='アプリがAを話したあと、あなたがBで返答します。';convBtn.textContent='🎤 私がBを話して会話';}feedback.style.display='none';localStorage.setItem('korConvMode',m);}
+    select.value=localStorage.getItem('korConvMode')||'app';select.onchange=updateMode;updateMode();
+    convBtn.onclick=()=>{const x=currentLesson();if(!x)return;window.KorSpeech.cancel();const m=select.value;feedback.style.display='none';if(m==='app'){appSay(x[5],0,()=>appSay(x[6],1));}else if(m==='userA'){listenUser(x[5],'A',()=>appSay(x[6],1));}else{setFeedback('まずAを聞いてください。続いてBを話します。');appSay(x[5],0,()=>listenUser(x[6],'B'));}};
   });
 })();
