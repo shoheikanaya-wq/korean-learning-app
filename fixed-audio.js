@@ -1,9 +1,16 @@
 // Fixed Korean dialogue audio map.
-// Add only audio files whose usage rights and speaker role have been verified.
-// Key: exact Korean sentence used by the lesson.
-// female/male: path relative to ./audio/voices/
+// Preferred production roles:
+//   female: Korean female speaker
+//   male: Korean male speaker
+// Audio must be generated/recorded under terms that permit app distribution.
+// The browser never stores a cloud TTS API key.
 window.KOR_FIXED_AUDIO={
-  // Example after verified audio is added:
-  // '안녕하세요.': {female:'female/hello.mp3'},
-  // '안녕하세요. 만나서 반갑습니다.': {male:'male/nice-to-meet-you.mp3'}
+  // Populate after production audio is approved.
+};
+window.KOR_VOICE_PLAN={
+  language:'ko-KR',
+  femaleRole:'female',
+  maleRole:'male',
+  format:'mp3',
+  policy:'fixed-audio-first, device-tts-fallback'
 };
