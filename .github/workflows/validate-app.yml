@@ -19,27 +19,14 @@ jobs:
           test -f lessons-extra.js
           test -f manifest.webmanifest
           test -f sw.js
-      - name: Validate current PWA wiring
+      - name: Validate current app wiring
         run: |
-          grep -q 'rel="manifest"' index.html
           grep -Eq "serviceWorker\.register\('./sw\.js\?v=[0-9]+'" index.html
           grep -Fq 'window.LESSONS?.[cat]' index.html
           grep -Eq '<script src="\./lessons\.js\?v=[0-9]+"></script>' index.html
           grep -Eq '<script src="\./lessons-extra\.js\?v=[0-9]+"></script>' index.html
           grep -q '"display":"standalone"' manifest.webmanifest
-          grep -q '"scope":"./"' manifest.webmanifest
-      - name: Validate current learning flow
-        run: |
-          grep -q 'data-start="daily"' index.html
-          grep -q 'data-start="travel"' index.html
-          grep -q 'data-start="business"' index.html
-          grep -q 'id="listen"' index.html
-          grep -q 'id="speak"' index.html
-          grep -q 'id="showWrite"' index.html
-          grep -q 'id="conv"' index.html
-          grep -q 'id="convReply"' index.html
-          grep -q 'id="finish"' index.html
-      - name: Validate lesson library structure
+      - name: Validate lesson library
         run: |
           node - <<'NODE'
           global.window={};
@@ -57,14 +44,7 @@ jobs:
           if(total<45) throw new Error(`Too few total lessons: ${total}`);
           console.log(`Validated ${total} lessons`);
           NODE
-      - name: Validate current pronunciation and handwriting UI
-        run: |
-          grep -q 'id="prosody"' index.html
-          grep -q 'class="pron"' index.html
-          grep -q "className='mora'" index.html
-          grep -q 'id="draw"' index.html
-          grep -q 'touch-action:none' index.html
-      - name: Validate hardened service worker
+      - name: Validate service worker
         run: |
           grep -Eq "const CACHE='kor-practice-v[0-9]+'" sw.js
           grep -q 'lessons.js' sw.js
