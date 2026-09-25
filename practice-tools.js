@@ -87,7 +87,7 @@
       function fillGrid(src,b,grid,threshold){for(let gy=0;gy<N;gy++)for(let gx=0;gx<N;gx++){const x=Math.round(b.minX+(gx/(N-1))*b.w),y=Math.round(b.minY+(gy/(N-1))*b.h);let hit=0;for(let dy=-2;dy<=2&&!hit;dy+=2)for(let dx=-2;dx<=2;dx+=2){const xx=Math.max(0,Math.min(319,x+dx)),yy=Math.max(0,Math.min(319,y+dy));if(src[(yy*320+xx)*4+3]>threshold){hit=1;break;}}grid[gy*N+gx]=hit;}}
       fillGrid(target,tb,tg,60);fillGrid(ink,ib,ig,40);const tol=easy?6:3;let targetN=0,inkN=0,covered=0,near=0;
       for(let gy=0;gy<N;gy++)for(let gx=0;gx<N;gx++){const k=gy*N+gx;if(tg[k]){targetN++;let hit=false;for(let dy=-tol;dy<=tol&&!hit;dy++)for(let dx=-tol;dx<=tol;dx++){const xx=gx+dx,yy=gy+dy;if(xx>=0&&xx<N&&yy>=0&&yy<N&&ig[yy*N+xx]){hit=true;break;}}if(hit)covered++;}if(ig[k]){inkN++;let hit=false;for(let dy=-tol;dy<=tol&&!hit;dy++)for(let dx=-tol;dx<=tol;dx++){const xx=gx+dx,yy=gy+dy;if(xx>=0&&xx<N&&yy>=0&&yy<N&&tg[yy*N+xx]){hit=true;break;}}if(hit)near++;}}
-      const coverage=targetN?covered/targetN:0,precision=inkN?near/inkN:0,ratioPenalty=Math.min(tb.w/ib.w,ib.w/tb.w,tb.h/ib.h,ib.h/tb.h),shape=coverage*precision,score=Math.round(100*shape*(.75+.25*ratioPenalty)),pass=coverage>=(easy?.52:.68)&&precision>=(easy?.56:.72)&&ratioPenalty>=(easy?.40:.62);
+      const coverage=targetN?covered/targetN:0,precision=inkN?near/inkN:0,ratioPenalty=Math.min(tb.w/ib.w,ib.w/tb.w,tb.h/ib.h,ib.h/tb.h),shape=coverage*precision,score=Math.round(100*shape*(.75+.25*ratioPenalty)),pass=coverage>=(easy?.52:.68)&&precision>=(easy?.56:.72)&&ratioPenalty>=(easy?.40:.62)&&ib.count<=tb.count*3;
       return{score,coverage,precision,pass,written:ib.count,shape,ratioPenalty,shapeBased:true};
     }
     function metrics(){
