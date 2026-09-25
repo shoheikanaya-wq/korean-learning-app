@@ -12,7 +12,7 @@
   async function run(){
     if(running)return;running=true;$('runChecks').disabled=true;
     try{
-      put('確認版',true,'3.5');
+      put('確認版',true,'3.6');
       const ua=navigator.userAgent,chrome=ua.match(/(?:Chrome|CriOS)\/([\d.]+)/),android=ua.match(/Android ([\d.]+)/);
       put('ブラウザ',null,`${chrome?'Chrome '+chrome[1]:'Chrome以外／判定不可'}${android?'・Android '+android[1]:''}${/; wv\)/.test(ua)?'・アプリ内表示':''}`);
       put('安全な接続',window.isSecureContext,window.isSecureContext?'HTTPSで接続':'HTTPS接続を確認してください');
