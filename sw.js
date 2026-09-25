@@ -1,4 +1,4 @@
-const CACHE='kor-practice-v100';
+const CACHE='kor-practice-v101';
 const SHELL=['./','./index.html','./fixed-audio.js?v=312832','./reply-guide.js?v=312832','./conversation-next.js?v=312832','./lessons.js?v=312832','./lessons-extra.js?v=312832','./manifest.webmanifest?v=312832','./icons/icon-192.png','./icons/icon-512.png','./practice-tools.js?v=312832','./today-summary.js?v=312832'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('kor-practice-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
