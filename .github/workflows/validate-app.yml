@@ -23,7 +23,7 @@ jobs:
         run: |
           grep -q 'rel="manifest"' index.html
           grep -Eq "serviceWorker\.register\('./sw\.js\?v=[0-9]+'" index.html
-          grep -q 'window.LESSONS?.[cat]' index.html
+          grep -Fq 'window.LESSONS?.[cat]' index.html
           grep -Eq '<script src="\./lessons\.js\?v=[0-9]+"></script>' index.html
           grep -Eq '<script src="\./lessons-extra\.js\?v=[0-9]+"></script>' index.html
           grep -q '"display":"standalone"' manifest.webmanifest
