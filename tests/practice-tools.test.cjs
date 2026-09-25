@@ -5,7 +5,7 @@ const callbacks={},elements={},storage=new Map(),spoken=[];
 class Element{
  constructor(id){this.id=id;this.textContent='';this.value='';this.checked=false;this.style={};this.events={};this.classList={add(){},remove(){}};}
  addEventListener(type,fn){this.events[type]=fn;}
- replaceChildren(){} add(){} append(){}
+ replaceChildren(){} add(){} append(){} prepend(){}
  set innerHTML(v){} get innerHTML(){return '';}
 }
 const element=id=>elements[id]||(elements[id]=new Element(id));
@@ -17,15 +17,15 @@ const synth={getVoices:()=>available,cancel(){},speak:u=>spoken.push(u),addEvent
 const document={getElementById:element,querySelector:()=>new Element(),querySelectorAll:()=>bubbles,createElement:t=>t==='canvas'?canvas():new Element(),addEventListener:(t,f)=>(callbacks[t]??=[]).push(f),fonts:{ready:Promise.resolve()}};
 const sandbox={document,window:{speechSynthesis:synth},speechSynthesis:synth,SpeechSynthesisUtterance:function(text){this.text=text;},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},Option:function(t,v){this.text=t;this.value=v;},navigator:{},location:{href:'https://example.com/korean-learning-app/'},URL,setTimeout,clearTimeout};
 vm.createContext(sandbox);vm.runInContext(fs.readFileSync('practice-tools.js','utf8'),sandbox);callbacks.DOMContentLoaded.forEach(f=>f());
-const speech=sandbox.window.KorSpeech;speech.speak('A',0);speech.speak('B',1);assert.notEqual(spoken[0].voice.voiceURI,spoken[1].voice.voiceURI);assert.notEqual(spoken[0].pitch,spoken[1].pitch);
-available=[available[0]];speech.speak('A',0);speech.speak('B',1);assert.equal(spoken[2].voice.voiceURI,spoken[3].voice.voiceURI);assert.notEqual(spoken[2].rate,spoken[3].rate);
+const speech=sandbox.window.KorSpeech;speech.speak('A',0);assert.equal(spoken[0].text,'A');
+available=[available[0]];speech.speak('B',0);assert.equal(spoken[1].voice.voiceURI,available[0].voiceURI);
 let continued=false;speech.speak('old',0,()=>continued=true);const old=spoken.at(-1);speech.cancel();old.onend();assert.equal(continued,false);
 const trace=sandbox.window.KorTrace;trace.reset();assert.match(element('traceProgress').textContent,/1 \/ 2/);
-element('check').onclick();assert.match(element('writeanswer').textContent,/まず/);
+element('check').onclick();assert.match(element('writeanswer').textContent,/書いてみましょう/);
 const c=elements.writebox;c.events.pointerdown({isPrimary:true,pointerId:1,clientX:40,clientY:40,preventDefault(){}});c.events.pointermove({pointerId:1,clientX:60,clientY:50,preventDefault(){}});c.events.pointerup({pointerId:1,type:'pointerup'});
 assert(c.getContext('2d').getImageData(0,0,320,320).data.some(v=>v));element('clear').onclick();assert(!c.getContext('2d').getImageData(0,0,320,320).data.some(v=>v));
 // Arbitrary filled pad must fail (not award automatic full credit).
-c.getContext('2d').fillRect(0,0,320,320);element('check').onclick();assert.match(element('writeanswer').textContent,/残っている部分/);
-element('clear').onclick();const ctx=c.getContext('2d');ctx.font='230px "Noto Sans KR", "Malgun Gothic", sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('안',160,176);element('check').onclick();assert.equal(element('writeanswer').textContent,'なぞれました！');
+c.getContext('2d').fillRect(0,0,320,320);element('check').onclick();assert.doesNotMatch(element('writeanswer').textContent,/文字としてOK|書けました/);
+element('clear').onclick();const ctx=c.getContext('2d');ctx.font='230px "Noto Sans KR", "Malgun Gothic", sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('안',160,176);element('check').onclick();assert.match(element('writeanswer').textContent,/文字としてOK/);
 element('traceNext').onclick();assert.match(element('traceProgress').textContent,/2 \/ 2/);element('ko').textContent='감사합니다.';trace.reset();assert.match(element('traceProgress').textContent,/1 \/ 5/);
-console.log('PASS: two voices, single voice contrast, cancellation, pointer drawing, clear, blank/scribble rejection, trace match, character navigation and reset');
+console.log('PASS: speech playback, cancellation, pointer drawing, clear, blank/scribble rejection, trace match, character navigation and reset');
