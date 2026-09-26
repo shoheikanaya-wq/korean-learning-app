@@ -1,1 +1,57 @@
-{"id":"/korean-learning-app/","name":"韓国語 会話トレーニング","short_name":"韓国語","description":"韓国語を話す人と会話できるようになるための実践トレーニング","start_url":"/korean-learning-app/?source=pwa","scope":"./","display":"standalone","orientation":"portrait-primary","background_color":"#f3efe6","theme_color":"#65584d","lang":"ja","dir":"ltr","prefer_related_applications":false,"icons":[{"src":"/korean-learning-app/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/korean-learning-app/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"/korean-learning-app/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+{
+  "id": "/korean-learning-app/",
+  "name": "韓国語 会話トレーニング",
+  "short_name": "韓国語",
+  "description": "韓国語を話す人と会話できるようになるための実践トレーニング",
+  "start_url": "/korean-learning-app/?source=pwa",
+  "scope": "/korean-learning-app/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3efe6",
+  "theme_color": "#65584d",
+  "lang": "ja",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/korean-learning-app/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/korean-learning-app/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/korean-learning-app/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "categories": [
+    "education",
+    "language"
+  ],
+  "shortcuts": [
+    {
+      "name": "今日の練習",
+      "short_name": "今日の練習",
+      "url": "/korean-learning-app/?source=pwa&mode=today",
+      "icons": [
+        {
+          "src": "/korean-learning-app/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
