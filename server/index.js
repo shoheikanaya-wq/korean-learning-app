@@ -15,7 +15,7 @@ app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin',ALLOWED_ORIGIN);
   res.setHeader('Vary','Origin');
   res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,PATCH,OPTIONS');
   if(req.method==='OPTIONS')return res.sendStatus(204);
   next();
 });
@@ -47,7 +47,7 @@ function cleanFeedback(body){
   const type=String(body.type||'other').slice(0,40);
   const text=String(body.text||'').trim().slice(0,500);
   if(!text)return null;
-  return {schema:1,device:body.device,type,text,createdAt:Date.now()};
+  return {schema:1,device:body.device,type,text,createdAt:Date.now(),status:'open'};
 }
 
 app.post('/v1/feedback',async(req,res)=>{
@@ -72,6 +72,15 @@ function requireAdmin(req,res,next){
   if(token!==ADMIN_TOKEN)return res.status(401).json({error:'unauthorized'});
   next();
 }
+
+app.patch('/v1/admin/feedback/:id',requireAdmin,async(req,res)=>{
+  if(!feedbackCollection)return res.status(503).json({error:'storage_not_configured'});
+  const id=String(req.params.id||'');
+  const status=req.body?.status==='done'?'done':'open';
+  if(!id)return res.status(400).json({error:'invalid_id'});
+  try{await feedbackCollection.doc(id).set({status,handledAt:status==='done'?Date.now():0},{merge:true});res.json({ok:true,status})}
+  catch(e){console.error('feedback update failed',e);res.status(500).json({error:'storage_failed'})}
+});
 
 app.get('/v1/admin/feedback',requireAdmin,async(_req,res)=>{
   if(!feedbackCollection)return res.json({feedback:[],storage:'not_configured'});
