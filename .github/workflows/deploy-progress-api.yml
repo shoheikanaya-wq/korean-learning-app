@@ -12,19 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: google-github-actions/auth@v2
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      - uses: google-github-actions/setup-gcloud@v2
-      - name: Build
-        run: gcloud builds submit --tag "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/kor/kor-progress:${{ github.sha }}"
-      - name: Deploy
-        run: >
-          gcloud run deploy kor-progress
-          --image "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/kor/kor-progress:${{ github.sha }}"
-          --region "${{ secrets.GCP_REGION }}"
-          --platform managed
-          --allow-unauthenticated
-          --set-env-vars "ALLOWED_ORIGIN=https://shoheikanaya-wq.github.io,KOR_ENABLE_STORAGE=1"
-          --set-secrets "KOR_ADMIN_TOKEN=KOR_ADMIN_TOKEN:latest"
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy Korean progress API
+        run: |
+          gcloud run deploy kor-progress-api \
+            --source . \
+            --region asia-northeast1 \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --allow-unauthenticated \
+            --set-env-vars ALLOWED_ORIGIN=https://shoheikanaya-wq.github.io,KOR_ENABLE_STORAGE=1 \
+            --set-secrets KOR_ADMIN_TOKEN=KOR_ADMIN_TOKEN:latest
+
+      - name: Show service URL
+        run: |
+          gcloud run services describe kor-progress-api \
+            --region asia-northeast1 \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --format='value(status.url)'
