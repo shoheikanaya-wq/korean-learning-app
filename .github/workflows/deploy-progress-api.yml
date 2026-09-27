@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -24,8 +26,20 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Deploy Korean progress API
+      - name: Preflight Google Cloud
+        shell: bash
         run: |
+          set -euo pipefail
+          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          test -n "$PROJECT" || { echo "GCP_PROJECT_ID is missing"; exit 1; }
+          gcloud secrets describe KOR_ADMIN_TOKEN --project "$PROJECT" >/dev/null             || { echo "Secret Manager secret KOR_ADMIN_TOKEN is missing"; exit 1; }
+          gcloud firestore databases describe --database='(default)' --project "$PROJECT" >/dev/null             || { echo "Firestore default database is missing"; exit 1; }
+          echo "GCP preflight OK"
+
+      - name: Deploy Korean progress API
+        shell: bash
+        run: |
+          set -euo pipefail
           gcloud run deploy kor-progress-api \
             --source . \
             --region asia-northeast1 \
@@ -34,9 +48,33 @@ jobs:
             --set-env-vars ALLOWED_ORIGIN=https://shoheikanaya-wq.github.io,KOR_ENABLE_STORAGE=1 \
             --set-secrets KOR_ADMIN_TOKEN=KOR_ADMIN_TOKEN:latest
 
-      - name: Show service URL
+      - name: Read and test service URL
+        id: service
+        shell: bash
         run: |
-          gcloud run services describe kor-progress-api \
+          set -euo pipefail
+          URL="$(gcloud run services describe kor-progress-api \
             --region asia-northeast1 \
             --project "${{ secrets.GCP_PROJECT_ID }}" \
-            --format='value(status.url)'
+            --format='value(status.url)')"
+          test -n "$URL" || { echo "Cloud Run URL was empty"; exit 1; }
+          curl --fail --silent --show-error "$URL/health"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Cloud Run health OK: $URL"
+
+      - name: Connect learner app to deployed API
+        shell: bash
+        env:
+          SERVICE_URL: ${{ steps.service.outputs.url }}
+        run: |
+          set -euo pipefail
+          printf "window.KOR_PROGRESS_API = '%s';\n" "$SERVICE_URL" > progress-config.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add progress-config.js
+          if git diff --cached --quiet; then
+            echo "progress-config.js already points to this API"
+          else
+            git commit -m "Connect Korean app to deployed progress API"
+            git push
+          fi
