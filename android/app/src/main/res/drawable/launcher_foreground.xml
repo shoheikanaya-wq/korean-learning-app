@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-  <path android:fillColor="#FFFFFF" android:pathData="M27,25h54a10,10 0,0 1,10 10v38a10,10 0,0 1,-10 10h-54a10,10 0,0 1,-10 -10v-38a10,10 0,0 1,10 -10z"/>
-  <path android:fillColor="#315F88" android:pathData="M35,37h38v8h-38zM35,50h38v8h-38zM35,63h38v8h-38z"/>
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item
+      android:width="108dp"
+      android:height="108dp"
+      android:gravity="center"
+      android:drawable="@drawable/korean_icon" />
+</layer-list>
