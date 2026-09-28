@@ -56,16 +56,16 @@
   ],
   "screenshots": [
     {
-      "src": "/korean-learning-app/screenshots/home.svg",
-      "sizes": "1080x1920",
-      "type": "image/svg+xml",
+      "src": "/korean-learning-app/screenshots/home.jpg",
+      "sizes": "320x500",
+      "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "韓国語アプリのホーム画面"
     },
     {
-      "src": "/korean-learning-app/screenshots/lesson.svg",
-      "sizes": "1080x1920",
-      "type": "image/svg+xml",
+      "src": "/korean-learning-app/screenshots/lesson.jpg",
+      "sizes": "320x500",
+      "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "聞く・話す・書く・会話の学習画面"
     }
