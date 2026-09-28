@@ -1,5 +1,5 @@
-const CACHE='kor-practice-v152';
-const SHELL=['./','./index.html','./progress-config.js?v=314220','./fixed-audio.js?v=314220','./reply-guide.js?v=314220','./conversation-next.js?v=314220','./lessons.js?v=314220','./lessons-extra.js?v=314220','./manifest.webmanifest?v=314220','./icons/icon-192.png','./icons/icon-512.png','./practice-tools.js?v=314220','./today-summary.js?v=314220'];
+const CACHE='kor-practice-v153';
+const SHELL=['./','./index.html','./progress-config.js?v=314230','./fixed-audio.js?v=314230','./reply-guide.js?v=314230','./conversation-next.js?v=314230','./lessons.js?v=314230','./lessons-extra.js?v=314230','./manifest.webmanifest?v=314230','./icons/icon-192.png','./icons/icon-512.png','./practice-tools.js?v=314230','./today-summary.js?v=314230'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('kor-practice-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
 async function networkFirst(request){try{const response=await fetch(request,{cache:'no-store'});if(response&&response.ok){const copy=response.clone();const cache=await caches.open(CACHE);await cache.put(request,copy)}return response}catch(err){return(await caches.match(request))||(request.mode==='navigate'?await caches.match('./index.html'):Response.error())}}
