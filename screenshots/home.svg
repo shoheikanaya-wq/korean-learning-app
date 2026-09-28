@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+<rect width="1080" height="1920" fill="#f5f1e8"/>
+<text x="60" y="110" font-size="64" font-weight="800" font-family="sans-serif" fill="#211d19">韓国語</text>
+<rect x="50" y="150" width="980" height="150" rx="28" fill="#eef7ff" stroke="#4e463e" stroke-width="4"/>
+<text x="85" y="215" font-size="54" font-weight="800" font-family="sans-serif" fill="#211d19">▶ 今日の練習</text>
+<text x="85" y="270" font-size="34" font-family="sans-serif" fill="#211d19">おすすめ5教材を自動で練習</text>
+
+<rect x="50" y="340" width="650" height="185" rx="26" fill="#fffdf8" stroke="#4e463e" stroke-width="4"/>
+<text x="85" y="418" font-size="58" font-weight="800" font-family="sans-serif" fill="#211d19">🏠 日常</text>
+<text x="90" y="478" font-size="34" font-family="sans-serif" fill="#211d19">実践</text>
+<rect x="720" y="340" width="310" height="185" rx="26" fill="#fff5d7" stroke="#4e463e" stroke-width="4"/>
+<text x="760" y="422" font-size="34" font-weight="800" font-family="sans-serif" fill="#211d19">ステップアップ</text>
+<rect x="50" y="555" width="650" height="185" rx="26" fill="#fffdf8" stroke="#4e463e" stroke-width="4"/>
+<text x="85" y="633" font-size="58" font-weight="800" font-family="sans-serif" fill="#211d19">✈️ 旅行</text>
+<text x="90" y="693" font-size="34" font-family="sans-serif" fill="#211d19">実践</text>
+<rect x="720" y="555" width="310" height="185" rx="26" fill="#fff5d7" stroke="#4e463e" stroke-width="4"/>
+<text x="760" y="637" font-size="34" font-weight="800" font-family="sans-serif" fill="#211d19">ステップアップ</text>
+<rect x="50" y="770" width="650" height="185" rx="26" fill="#fffdf8" stroke="#4e463e" stroke-width="4"/>
+<text x="85" y="848" font-size="58" font-weight="800" font-family="sans-serif" fill="#211d19">💼 仕事</text>
+<text x="90" y="908" font-size="34" font-family="sans-serif" fill="#211d19">実践</text>
+<rect x="720" y="770" width="310" height="185" rx="26" fill="#fff5d7" stroke="#4e463e" stroke-width="4"/>
+<text x="760" y="852" font-size="34" font-weight="800" font-family="sans-serif" fill="#211d19">ステップアップ</text>
+<text x="70" y="1410" font-size="42" font-weight="800" font-family="sans-serif" fill="#211d19">大きな文字・大きなボタン</text>
+<text x="70" y="1480" font-size="36" font-family="sans-serif" fill="#211d19">ホーム画面からすぐ起動</text>
+</svg>
