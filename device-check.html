@@ -76,7 +76,7 @@ document.getElementById('env').textContent=
  ' ／ 画面：'+screen.width+'×'+screen.height;
 document.getElementById('copy').onclick=async()=>{
  const lines=tests.map((t,i)=>(i+1)+' '+t[0]+'：'+(state[i]==='ok'?'できた':state[i]==='ng'?'できない':'未確認'));
- const text='韓国語アプリ 実機チェック\nVer.3.14.48\n'+lines.join('\n');
+ const text='韓国語アプリ 実機チェック\nVer.3.14.49\n'+lines.join('\n');
  try{await navigator.clipboard.writeText(text);result.textContent='確認結果をコピーしました。この会話に貼り付けてください。'}catch(e){result.textContent='コピーできない場合は、この画面をスクリーンショットしてください。'}
 };
 document.getElementById('reset').onclick=()=>{state={};save();render()};
