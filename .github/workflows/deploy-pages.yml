@@ -25,6 +25,17 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Build Android APK for direct Pages download
+        run: |
+          set -euo pipefail
+          cp icons/icon-512.png android/app/src/main/res/drawable/korean_icon.png
+          cd android
+          gradle --no-daemon assembleDebug
+          cd ..
+          mkdir -p downloads
+          cp android/app/build/outputs/apk/debug/app-debug.apk downloads/korean-learning-app.apk
+          test -s downloads/korean-learning-app.apk
+          sha256sum downloads/korean-learning-app.apk
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
@@ -66,3 +77,5 @@ jobs:
           check "$BASE/icons/icon-512.png" 'content-type:.*image/png'
           file /tmp/body
           check "$BASE/?source=pwa" 'content-type:.*text/html'
+          check "$BASE/downloads/korean-learning-app.apk" 'content-type:.*(application/vnd.android.package-archive|application/octet-stream|application/zip)'
+          test "$(wc -c < /tmp/body)" -gt 20000
