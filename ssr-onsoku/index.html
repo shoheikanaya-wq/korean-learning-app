@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel出力　<span style="font-size:12px;color:#7a8691">v1.9</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.0</span></p></div></header>
 
 <section class="card">
 <div class="section-title">初回だけ：Excel雛形</div>
@@ -47,7 +47,7 @@
 
 <section id="detailsCard" class="card" hidden><details><summary>Wordの読み取り内容を見る</summary><pre id="rawText"></pre></details></section>
 
-<button id="exportButton" class="action primary" disabled>Excelを出力</button>
+<button id="exportButton" class="action primary" disabled>Excelを保存</button>
 <div id="message" class="message">初回はExcel雛形を登録してください。</div>
 
 <section class="card">
@@ -95,7 +95,7 @@ async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(fu
 async function loadTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
 async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent=t?"雛形：登録済み（"+t.name+"）":"雛形：未登録";$("templateStatus").className="statusline "+(t?"template-ok":"template-ng");updateExportState()}catch(e){show("雛形保存領域を確認できません。",true)}}
 async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
-async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを出力できます。":"読み取りOK。初回だけExcel雛形を登録してください。"):"赤い項目を確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
+async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを保存できます。":"読み取りOK。初回だけExcel雛形を登録してください。"):"赤い項目を確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
 async function extractDocx(file){if(!/\.docx$/i.test(file.name))throw new Error("docxファイルを選択してください");var zip=await JSZip.loadAsync(await file.arrayBuffer());var doc=zip.file("word/document.xml");if(!doc)throw new Error("Word本文を取得できません");var xml=await doc.async("string");xml=xml.replace(/<w:tab\b[^>]*\/>/g," ").replace(/<w:br\b[^>]*\/>/g," ");var paras=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];paras.forEach(function(p){var chunks=[],re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g,m;while((m=re.exec(p)))chunks.push(decodeXml(m[1]));var t=chunks.join("").replace(/\u00a0/g," ").trim();if(t)lines.push(t)});if(!lines.length)throw new Error("Word本文が空です");return lines}
 function decodeXml(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
 function parse(lines,fileName){var machines={};ORDER.forEach(function(k){machines[k]=[]});var factories={1:null,2:null,3:null},bodyDate=null,currentMachine=null,warnings=[];lines.forEach(function(raw){var line=raw.normalize("NFKC").trim();if(!bodyDate)bodyDate=parseDateText(line);var ft=parseFactory(raw);if(ft){factories[ft.index]=ft.value;currentMachine=null;return}var mac=detectMachine(line);if(mac){currentMachine=mac;return}if(parseDateText(line)){currentMachine=null;return}if(currentMachine){var nums=line.match(/\d{2}\.\d/g)||[];nums.forEach(function(x){machines[currentMachine].push(Number(x))})}});
@@ -116,7 +116,7 @@ function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=f
 function updateExportState(){$("exportButton").disabled=!(templateReady&&current&&current.parsed&&current.parsed.canExport)}
 function show(msg,err){$("message").textContent=msg;$("message").style.color=err?"#b42318":"#4f5963"}
 async function exportExcel(){if(!templateReady||!current||!current.parsed.canExport)return;$("exportButton").disabled=true;show("Excelを作成中…");try{var t=await loadTemplate();if(!t)throw new Error("雛形がありません");var zip=await JSZip.loadAsync(t.buf),wbXml=await zip.file("xl/workbook.xml").async("string"),relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string"),path=resolveSheet(wbXml,relXml,"リレー配置と測定温度記入シート"),xml=await zip.file(path).async("string"),p=current.parsed;xml=setCell(xml,"O1",jpDate(p.date),"string");var ft=factoryText(p.factories);xml=setCell(xml,"S1",ft||null,"string");xml=setCell(xml,"V1",null,"string");
-ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);wbXml=forceCalc(wbXml);zip.file("xl/workbook.xml",wbXml);var blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";download(blob,name);show(name+" を出力しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
+ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);wbXml=forceCalc(wbXml);zip.file("xl/workbook.xml",wbXml);var blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";var file=new File([blob],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});var saved=await saveExcelFile(file);if(saved)show(name+" を保存しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
 function resolveSheet(wb,rels,name){var tags=wb.match(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?\s*>/g)||[],rid=null;for(var i=0;i<tags.length;i++){if(decodeXml(attr(tags[i],"name")||"")===name){rid=attr(tags[i],"r:id");break}}if(!rid)throw new Error("対象シートがありません");var rs=rels.match(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*\/?\s*>/g)||[],target=null;for(var j=0;j<rs.length;j++)if(attr(rs[j],"Id")===rid){target=attr(rs[j],"Target");break}if(!target)throw new Error("シート参照を取得できません");target=target.replace(/^\//,"");return target.indexOf("xl/")===0?target:"xl/"+target.replace(/^\.\//,"")}
 function attr(tag,name){var m=tag.match(new RegExp("(?:^|\\s)"+escRe(name)+"=\"([^\"]*)\""));return m?m[1]:null}
 function prefix(xml,root){var m=xml.match(new RegExp("<([A-Za-z_][\\w.-]*:)?"+root+"\\b"));return m&&m[1]?m[1]:""}
@@ -125,7 +125,36 @@ function cell(address,value,type,style,p){var s=style?" s=\""+style+"\"":"";if(t
 function escXml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
 function escRe(s){return s.replace(/[.*+?^$(){}|[\]\\]/g,"\\$&")}
 function forceCalc(xml){var p=prefix(xml,"workbook"),re=new RegExp("<"+escRe(p)+"calcPr\\b[^>]*\\/>"),c="<"+p+"calcPr calcMode=\"auto\" fullCalcOnLoad=\"1\" forceFullCalc=\"1\"/>";return re.test(xml)?xml.replace(re,c):xml.replace("</"+p+"workbook>",c+"</"+p+"workbook>")}
-function download(blob,name){var xlsxBlob=new Blob([blob],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});var a=document.createElement("a");a.href=URL.createObjectURL(xlsxBlob);a.download=name.endsWith(".xlsx")?name:name+".xlsx";a.type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500)}
+async function saveExcelFile(file){
+  try{
+    if(window.showSaveFilePicker){
+      var handle=await window.showSaveFilePicker({
+        suggestedName:file.name,
+        types:[{description:"Excel ワークブック",accept:{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":[".xlsx"]}}]
+      });
+      var writable=await handle.createWritable();
+      await writable.write(file);
+      await writable.close();
+      return true;
+    }
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"SSR温度測定 Excel"});
+      return true;
+    }
+    var a=document.createElement("a");
+    var url=URL.createObjectURL(file);
+    a.href=url;
+    a.download=file.name;
+    a.rel="noopener";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);a.remove()},3000);
+    return true;
+  }catch(e){
+    if(e&&e.name==="AbortError"){show("保存をキャンセルしました。");return false}
+    throw e;
+  }
+}
 </script>
 </body>
 </html>
