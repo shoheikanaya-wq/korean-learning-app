@@ -23,6 +23,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check Google Cloud auth inputs
+        id: authinputs
+        shell: bash
+        env:
+          WIF: ${{ secrets.GCP_WIF_PROVIDER }}
+          SA: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          [ -n "$WIF" ] && echo "wif=true" >> "$GITHUB_OUTPUT" || echo "wif=false" >> "$GITHUB_OUTPUT"
+          [ -n "$SA" ] && echo "sa=true" >> "$GITHUB_OUTPUT" || echo "sa=false" >> "$GITHUB_OUTPUT"
+          [ -n "$PROJECT" ] && echo "project=true" >> "$GITHUB_OUTPUT" || echo "project=false" >> "$GITHUB_OUTPUT"
+
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
@@ -97,6 +110,9 @@ jobs:
         if: always()
         shell: bash
         env:
+          WIF_PRESENT: ${{ steps.authinputs.outputs.wif }}
+          SA_PRESENT: ${{ steps.authinputs.outputs.sa }}
+          PROJECT_PRESENT: ${{ steps.authinputs.outputs.project }}
           AUTH_OUTCOME: ${{ steps.auth.outcome }}
           GCLOUD_OUTCOME: ${{ steps.gcloud.outcome }}
           PREFLIGHT_OUTCOME: ${{ steps.preflight.outcome }}
@@ -109,6 +125,9 @@ jobs:
           cat > deploy-status.json <<EOF
           {
             "commit": "$GITHUB_SHA",
+            "wif_present": "$WIF_PRESENT",
+            "service_account_present": "$SA_PRESENT",
+            "project_present": "$PROJECT_PRESENT",
             "auth": "$AUTH_OUTCOME",
             "gcloud": "$GCLOUD_OUTCOME",
             "preflight": "$PREFLIGHT_OUTCOME",
