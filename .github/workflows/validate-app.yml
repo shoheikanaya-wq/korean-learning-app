@@ -25,7 +25,19 @@ jobs:
           grep -Fq 'window.LESSONS?.[cat]' index.html
           grep -Eq '<script src="\./lessons\.js\?v=[0-9]+"></script>' index.html
           grep -Eq '<script src="\./lessons-extra\.js\?v=[0-9]+"></script>' index.html
-          grep -q '"display":"standalone"' manifest.webmanifest
+          node - <<'NODE'
+          const fs=require('fs');
+          const m=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));
+          if(m.display!=='standalone') throw new Error('manifest display must be standalone');
+          if(!m.start_url||!m.scope) throw new Error('manifest start_url/scope missing');
+          if(!Array.isArray(m.icons)||!m.icons.some(x=>x.sizes==='192x192')||!m.icons.some(x=>x.sizes==='512x512')) throw new Error('required PWA icons missing');
+          if(!Array.isArray(m.screenshots)||m.screenshots.length<2) throw new Error('PWA screenshots missing');
+          for(const s of m.screenshots){
+            if(!/image\/(png|jpeg)/.test(s.type||'')) throw new Error('screenshot must be PNG or JPEG');
+            const p='.'+s.src.replace('/korean-learning-app','');
+            if(!fs.existsSync(p)) throw new Error('missing screenshot file: '+p);
+          }
+          NODE
       - name: Validate lesson library
         run: |
           node - <<'NODE'
