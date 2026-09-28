@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+<rect width="1080" height="1920" fill="#f5f1e8"/>
+<rect x="40" y="40" width="240" height="85" rx="18" fill="#fffdf8" stroke="#4e463e" stroke-width="3"/><text x="85" y="95" font-size="31" font-weight="800" font-family="sans-serif" fill="#211d19">ホーム</text><rect x="300" y="40" width="240" height="85" rx="18" fill="#332e29" stroke="#4e463e" stroke-width="3"/><text x="345" y="95" font-size="31" font-weight="800" font-family="sans-serif" fill="white">日常</text><rect x="560" y="40" width="240" height="85" rx="18" fill="#fffdf8" stroke="#4e463e" stroke-width="3"/><text x="605" y="95" font-size="31" font-weight="800" font-family="sans-serif" fill="#211d19">旅行</text><rect x="820" y="40" width="240" height="85" rx="18" fill="#fffdf8" stroke="#4e463e" stroke-width="3"/><text x="865" y="95" font-size="31" font-weight="800" font-family="sans-serif" fill="#211d19">仕事</text>
+<rect x="50" y="280" width="980" height="1300" rx="34" fill="#fffdf8" stroke="#8d8175" stroke-width="4"/>
+<text x="300" y="470" font-size="96" font-weight="800" font-family="sans-serif" fill="#211d19">안녕하세요</text>
+<text x="270" y="600" font-size="42" font-weight="700" font-family="sans-serif" fill="#211d19">an.njʌŋ.ha.se.jo</text>
+<text x="220" y="760" font-size="54" font-weight="800" font-family="sans-serif" fill="#211d19">ア ン ニョ ン ハ セ ヨ</text>
+<text x="360" y="900" font-size="64" font-weight="800" font-family="sans-serif" fill="#211d19">こんにちは</text>
+<rect x="100" y="1000" width="880" height="135" rx="24" fill="#315f88"/>
+<text x="440" y="1085" font-size="52" font-weight="800" font-family="sans-serif" fill="white">🔊 聞く</text>
+<rect x="100" y="1320" width="880" height="135" rx="24" fill="#332e29"/>
+<text x="380" y="1405" font-size="46" font-weight="800" font-family="sans-serif" fill="white">次：話す →</text>
+<text x="80" y="1660" font-size="48" font-weight="800" font-family="sans-serif" fill="#211d19">聞く → 話す → 書く → 会話</text>
+</svg>
