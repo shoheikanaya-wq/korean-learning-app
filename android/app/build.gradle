@@ -8,7 +8,7 @@ android {
         applicationId 'jp.sk.koreanlearning'
         minSdk 26
         targetSdk 35
-        versionCode 3
-        versionName '3.14.38'
+        versionCode 4
+        versionName '3.14.44'
     }
 }
