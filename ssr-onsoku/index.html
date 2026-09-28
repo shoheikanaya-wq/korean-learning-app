@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f4e78">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SSR温測">
+<title>SSR温測 Word→Excel</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;color:#17202a;background:#eef3f7;--blue:#1f4e78;--blue2:#2f75b5;--ok:#1f7a3f;--ng:#b42318;--warn:#9a6400}*{box-sizing:border-box}body{margin:0}.app{max-width:880px;margin:auto;padding:14px 12px 42px}.hero{display:flex;align-items:center;gap:12px;padding:8px 2px 14px}.mark{width:58px;height:58px;border-radius:17px;background:var(--blue);color:#fff;font-weight:900;display:grid;place-items:center;box-shadow:0 5px 16px #1f4e7833}.hero h1{margin:0;font-size:27px}.hero p{margin:3px 0 0;color:#5b6570;font-weight:650}.card{background:#fff;border:1px solid #dde6ed;border-radius:18px;padding:15px;margin-bottom:13px;box-shadow:0 3px 14px #17334d12}.section-title{font-size:19px;font-weight:900;margin-bottom:10px}.file-button,.action{display:block;width:100%;border:0;border-radius:16px;padding:17px 12px;text-align:center;font-size:21px;font-weight:900;cursor:pointer}.file-button{background:var(--blue2);color:#fff}.action{background:#edf3f8;color:#163c5d;border:1px solid #cbd9e5}.action.primary{background:#1f7a3f;color:white;border:0}.action:disabled{background:#adb8bf;color:#fff;cursor:not-allowed}.hidden-input{position:absolute;left:-9999px}.statusline{margin:10px 0 0;font-weight:800;overflow-wrap:anywhere}.small{font-size:13px;color:#69747e;line-height:1.5}.template-ok{color:var(--ok)}.template-ng{color:var(--ng)}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.summary-grid div{background:#f5f8fb;border-radius:12px;padding:9px}.summary-grid span{display:block;font-size:12px;color:#6b7680}.summary-grid strong{display:block;margin-top:2px}.factory{font-size:19px;font-weight:900;text-align:center;padding:13px 4px}.statusbox{border-radius:12px;padding:11px;text-align:center;font-weight:900}.ok{background:#e7f5eb;color:var(--ok)}.ng{background:#fdebea;color:var(--ng)}.warn{background:#fff4d6;color:var(--warn)}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:590px}th,td{padding:9px 7px;border-bottom:1px solid #e5e9ed;text-align:center;font-variant-numeric:tabular-nums}th{background:#f3f6f9;font-size:12px}th:first-child,td:first-child{text-align:left;font-weight:850}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:900}.pill.ok{background:#e7f5eb}.pill.ng{background:#fdebea}.pill.warn{background:#fff4d6}details summary{font-weight:850;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f8fa;padding:10px;border-radius:10px;max-height:300px;overflow:auto;font-size:12px}.message{text-align:center;padding:8px;font-weight:750;min-height:35px}.steps{margin:0;padding-left:20px;line-height:1.8;font-weight:650}footer{font-size:12px;color:#6c7680;line-height:1.55;padding:0 6px}@media(max-width:520px){.app{padding:10px 9px 32px}.hero h1{font-size:24px}.summary-grid{grid-template-columns:1fr}.file-button,.action{font-size:20px}}
+</style>
+</head>
+<body>
+<main class="app">
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel出力</p></div></header>
+
+<section class="card">
+<div class="section-title">初回だけ：Excel雛形</div>
+<label class="action" for="templateInput">Excel雛形を登録 / 交換</label>
+<input id="templateInput" class="hidden-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+<div id="templateStatus" class="statusline template-ng">雛形：未登録</div>
+<p class="small">会社で使う温測シートの雛形を1回登録すると、このスマホ内に保存します。測定データも雛形も外部サーバーへ送信しません。</p>
+</section>
+
+<section class="card">
+<div class="section-title">普段の操作</div>
+<label class="file-button" for="docxInput">Wordを選択</label>
+<input id="docxInput" class="hidden-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+<div id="fileName" class="statusline">Word：未選択</div>
+<p class="small">例：20261001.docx / 25.10.30-1.docx</p>
+</section>
+
+<section id="summaryCard" class="card" hidden>
+<div class="section-title">読み取り結果</div>
+<div class="summary-grid"><div><span>出力日付</span><strong id="dateResult">-</strong></div><div><span>日付照合</span><strong id="dateStatus">-</strong></div></div>
+<div id="factoryResult" class="factory">①--.-℃　②--.-℃　③--.-℃</div>
+<div id="globalStatus" class="statusbox warn">確認中</div>
+</section>
+
+<section id="machineCard" class="card" hidden>
+<div class="section-title">機台チェック</div>
+<div class="tablewrap"><table><thead><tr><th>機台</th><th>盤内上</th><th>盤内下</th><th>入力数</th><th>判定</th></tr></thead><tbody id="machineRows"></tbody></table></div>
+</section>
+
+<section id="detailsCard" class="card" hidden><details><summary>Wordの読み取り内容を見る</summary><pre id="rawText"></pre></details></section>
+
+<button id="exportButton" class="action primary" disabled>Excelを出力</button>
+<div id="message" class="message">初回はExcel雛形を登録してください。</div>
+
+<section class="card">
+<div class="section-title">ホーム画面へ追加</div>
+<ol class="steps"><li>このページをChromeで開く</li><li>右上の「︙」</li><li>「ホーム画面に追加」または「アプリをインストール」</li></ol>
+</section>
+<footer>Word/Excelのファイル処理はブラウザ内だけで実行します。GitHub Pagesはアプリ画面を配るだけで、選択した会社ファイルをアップロードする処理はありません。</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+"use strict";
+var ORDER=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];
+var EXPECTED={"MM18":46,"FM81":22,"FM84":30,"FM83-1":37,"FM83-2":14,"FM96":20,"FM97":20,"FM19":32,"FE04":24,"FE01":20,"FM07":34,"FM01":22,"FM22":32};
+var OPTIONAL={"MM18":true};
+var MAP={
+"MM18":{"upper":"D2","lower":"F2","ssr":["B4","C4","B6","C6","D6","E6","F6","G6","H6","I6","J6","K6","L6","M6","N6","O6","B8","C8","D8","E8","F8","G8","H8","I8","J8","K8","L8","M8","N8","O8","B10","C10","D10","E10","F10","G10","H10","I10","J10","K10","L10","M10","N10","O10"]},
+"FE01":{"upper":"D12","lower":"F12","ssr":["B14","C14","D14","E14","F14","G14","H14","I14","J14","K14","B16","C16","F16","G16","H16","I16","J16","K16"]},
+"FE04":{"upper":"D18","lower":"F18","ssr":["B20","C20","D20","E20","F20","G20","H20","I20","J20","K20","B22","C22","D22","E22","F22","G22","H22","I22","J22","K22","L22","M22"]},
+"FM81":{"upper":"D24","lower":"F24","ssr":["B26","C26","D26","E26","F26","G26","H26","B28","C28","D28","E28","F28","G28","H28","B30","C30","D30","E30","F30","G30"]},
+"FM83-1":{"upper":"D32","lower":"F32","ssr":["B34","C34","D34","E34","F34","G34","H34","I34","J34","K34","L34","M34","N34","O34","P34","Q34","R34","S34","B36","C36","D36","E36","F36","G36","H36","I36","J36","K36","L36","M36","N36","O36","P36","Q36","R36"]},
+"FM83-2":{"upper":"D38","lower":"F38","ssr":["B40","C40","D40","E40","F40","G40","B42","C42","D42","E42","F42","G42"]},
+"FM84":{"upper":"D45","lower":"F45","ssr":["B47","C47","D47","E47","F47","G47","B49","C49","D49","E49","F49","G49","H49","I49","J49","K49","L49","M49","N49","O49","B51","C51","D51","E51","F51","G51","H51","I51"]},
+"FM96":{"upper":"D54","lower":"F54","ssr":["B56","C56","D56","E56","F56","G56","B58","C58","D58","E58","F58","G58","B60","C60","D60","E60","F60","G60"]},
+"FM97":{"upper":"M54","lower":"O54","ssr":["K56","L56","M56","N56","O56","P56","Q56","K58","L58","M58","N58","O58","P58","Q58","K60","L60","M60","N60"]},
+"FM19":{"upper":"D63","lower":"F63","ssr":["B65","C65","D65","E65","F65","G65","B67","C67","D67","E67","F67","G67","B69","C69","D69","E69","F69","G69","B71","C71","D71","E71","F71","G71","B73","C73","D73","E73","F73","G73"]},
+"FM22":{"upper":"M63","lower":"O63","ssr":["K65","L65","M65","N65","O65","P65","Q65","R65","S65","T65","U65","V65","K67","L67","M67","N67","O67","P67","Q67","R67","S67","K69","L69","M69","N69","O69","P69","Q69","R69","S69"]},
+"FM01":{"upper":"D76","lower":"F76","ssr":["B78","C78","D78","E78","F78","G78","H78","B80","C80","D80","E80","F80","G80","H80","B82","C82","D82","E82","F82","G82"]},
+"FM07":{"upper":"M76","lower":"O76","ssr":["K78","L78","M78","N78","O78","P78","Q78","R78","S78","T78","U78","V78","K80","L80","M80","N80","O80","P80","Q80","R80","S80","T80","U80","V80","O82","P82","Q82","R82","S82","T82","U82","V82"]}
+};
+var HEADERS={
+"MM18":["C2","E2","G2"],"FE01":["C12","E12","G12"],"FE04":["C18","E18","G18"],"FM81":["C24","E24","G24"],"FM83-1":["C32","E32","G32"],"FM83-2":["C38","E38","G38"],"FM84":["C45","E45","G45"],"FM96":["C54","E54","G54"],"FM97":["L54","N54","P54"],"FM19":["C63","E63","G63"],"FM22":["L63","N63","P63"],"FM01":["C76","E76","G76"],"FM07":["L76","N76","P76"]
+};
+var current=null,templateReady=false;
+function $(id){return document.getElementById(id)}
+document.addEventListener("DOMContentLoaded",function(){
+ checkTemplate();
+ $("templateInput").addEventListener("change",registerTemplate);
+ $("docxInput").addEventListener("change",readWord);
+ $("exportButton").addEventListener("click",exportExcel);
+ if("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(function(){});
+});
+function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
+async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now()},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
+async function loadTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
+async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent=t?"雛形：登録済み（"+t.name+"）":"雛形：未登録";$("templateStatus").className="statusline "+(t?"template-ok":"template-ng");updateExportState()}catch(e){show("雛形保存領域を確認できません。",true)}}
+async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
+async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを出力できます。":"読み取りOK。初回だけExcel雛形を登録してください。"):"赤い項目を確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
+async function extractDocx(file){if(!/\.docx$/i.test(file.name))throw new Error("docxファイルを選択してください");var zip=await JSZip.loadAsync(await file.arrayBuffer());var doc=zip.file("word/document.xml");if(!doc)throw new Error("Word本文を取得できません");var xml=await doc.async("string");xml=xml.replace(/<w:tab\b[^>]*\/>/g," ").replace(/<w:br\b[^>]*\/>/g," ");var paras=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];paras.forEach(function(p){var chunks=[],re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g,m;while((m=re.exec(p)))chunks.push(decodeXml(m[1]));var t=chunks.join("").replace(/\u00a0/g," ").trim();if(t)lines.push(t)});if(!lines.length)throw new Error("Word本文が空です");return lines}
+function decodeXml(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
+function parse(lines,fileName){var machines={};ORDER.forEach(function(k){machines[k]=[]});var factories={1:null,2:null,3:null},bodyDate=null,currentMachine=null,warnings=[];lines.forEach(function(raw){var line=raw.normalize("NFKC").trim();if(!bodyDate)bodyDate=parseDateText(line);var ft=parseFactory(raw);if(ft){factories[ft.index]=ft.value;currentMachine=null;return}var mac=detectMachine(line);if(mac){currentMachine=mac;return}if(parseDateText(line)){currentMachine=null;return}if(currentMachine){var nums=line.match(/\d{2}\.\d/g)||[];nums.forEach(function(x){machines[currentMachine].push(Number(x))})}});
+var fileDate=parseDateFile(fileName),finalDate=fileDate||bodyDate,dateOk=!!finalDate,dateStatus="OK";if(!finalDate){dateStatus="日付なし"}else if(fileDate&&bodyDate&&dateKey(fileDate)!==dateKey(bodyDate)){dateStatus="不一致";dateOk=false;warnings.push("ファイル名と本文の日付が一致しません")}else if(fileDate&&bodyDate){dateStatus="一致"}else if(fileDate){dateStatus="ファイル名"}else{dateStatus="本文"}
+var results={},machineOk=true;ORDER.forEach(function(k){var vals=machines[k],status;if(!vals.length&&OPTIONAL[k])status="未測定OK";else if(vals.length===EXPECTED[k])status="OK";else{status="NG";machineOk=false}results[k]={values:vals,count:vals.length,expected:EXPECTED[k],upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>1?vals.slice(2):[],status:status}});
+var factoriesOk=[1,2,3].every(function(i){return Number.isFinite(factories[i])});if(!factoriesOk)warnings.push("①②③の構内温度がそろっていません");return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,date:finalDate,dateStatus:dateStatus,dateOk:dateOk,factoriesOk:factoriesOk,machineOk:machineOk,canExport:dateOk&&factoriesOk&&machineOk,warnings:warnings}}
+function detectMachine(line){var n=line.normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/[‐‑‒–—―−－]/g,"-");var a=["FM83-1","FM83-2","MM18","FM81","FM84","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];for(var i=0;i<a.length;i++)if(n.indexOf(a[i])>=0)return a[i];return null}
+function parseFactory(raw){var o=raw.trim(),n=o.normalize("NFKC"),idx=null;if(/[①]|まるいち|マルイチ|丸一|〇一|○1/i.test(o)||/まるいち|マルイチ|丸一|〇一|○1/i.test(n))idx=1;if(/[②]|まるに|マルニ|丸二|〇二|○2/i.test(o)||/まるに|マルニ|丸二|〇二|○2/i.test(n))idx=2;if(/[③]|まるさん|マルサン|丸三|〇三|○3/i.test(o)||/まるさん|マルサン|丸三|〇三|○3/i.test(n))idx=3;if(!idx)return null;var m=n.match(/\d{2}\.\d/);return{index:idx,value:m?Number(m[0]):null}}
+function parseDateFile(name){var b=name.replace(/\.[^.]+$/,"").normalize("NFKC"),m=b.match(/(?:^|\D)(20\d{2})[._-]?(\d{2})[._-]?(\d{2})(?:\D|$)/);if(m)return validDate(+m[1],+m[2],+m[3]);m=b.match(/(?:^|\D)(\d{2})[._-](\d{1,2})[._-](\d{1,2})(?:\D|$)/);return m?validDate(2000+(+m[1]),+m[2],+m[3]):null}
+function parseDateText(text){var n=text.normalize("NFKC"),m=n.match(/(^|\D)(\d{2,4})\s*(?:年|[.\/-])\s*(\d{1,2})\s*(?:月|[.\/-])\s*(\d{1,2})\s*日?/);if(!m)return null;var y=+m[2];if(y<100)y+=2000;return validDate(y,+m[3],+m[4])}
+function validDate(y,m,d){var dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d?{y:y,m:m,d:d}:null}
+function dateKey(x){return x?String(x.y)+String(x.m).padStart(2,"0")+String(x.d).padStart(2,"0"):""}
+function jpDate(x){return x?x.y+"年"+x.m+"月"+x.d+"日":"-"}
+function temp(v){return Number.isFinite(v)?v.toFixed(1)+"℃":"--.-℃"}
+function num(v){return Number.isFinite(v)?v.toFixed(1):"-"}
+function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent="①"+temp(p.factories[1])+"　②"+temp(p.factories[2])+"　③"+temp(p.factories[3]);$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":(r.status==="未測定OK"?"warn":"ng");tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+r.count+"/"+r.expected+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"全項目OK：Excel出力可能":(p.warnings[0]||"入力数にNGがあります")}
+function updateExportState(){$("exportButton").disabled=!(templateReady&&current&&current.parsed&&current.parsed.canExport)}
+function show(msg,err){$("message").textContent=msg;$("message").style.color=err?"#b42318":"#4f5963"}
+async function exportExcel(){if(!templateReady||!current||!current.parsed.canExport)return;$("exportButton").disabled=true;show("Excelを作成中…");try{var t=await loadTemplate();if(!t)throw new Error("雛形がありません");var zip=await JSZip.loadAsync(t.buf),wbXml=await zip.file("xl/workbook.xml").async("string"),relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string"),path=resolveSheet(wbXml,relXml,"リレー配置と測定温度記入シート"),xml=await zip.file(path).async("string"),p=current.parsed;xml=setCell(xml,"O1",jpDate(p.date),"string");xml=setCell(xml,"S1","①"+p.factories[1].toFixed(1)+"℃　②"+p.factories[2].toFixed(1)+"℃　③"+p.factories[3].toFixed(1)+"℃","string");xml=setCell(xml,"V1",null,"string");
+ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);wbXml=forceCalc(wbXml);zip.file("xl/workbook.xml",wbXml);var blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";download(blob,name);show(name+" を出力しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
+function resolveSheet(wb,rels,name){var tags=wb.match(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?\s*>/g)||[],rid=null;for(var i=0;i<tags.length;i++){if(decodeXml(attr(tags[i],"name")||"")===name){rid=attr(tags[i],"r:id");break}}if(!rid)throw new Error("対象シートがありません");var rs=rels.match(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*\/?\s*>/g)||[],target=null;for(var j=0;j<rs.length;j++)if(attr(rs[j],"Id")===rid){target=attr(rs[j],"Target");break}if(!target)throw new Error("シート参照を取得できません");target=target.replace(/^\//,"");return target.indexOf("xl/")===0?target:"xl/"+target.replace(/^\.\//,"")}
+function attr(tag,name){var m=tag.match(new RegExp("(?:^|\\s)"+escRe(name)+"=\"([^\"]*)\""));return m?m[1]:null}
+function prefix(xml,root){var m=xml.match(new RegExp("<([A-Za-z_][\\w.-]*:)?"+root+"\\b"));return m&&m[1]?m[1]:""}
+function setCell(xml,address,value,type){var p=prefix(xml,"worksheet"),row=+(address.match(/\d+/)||["0"])[0],rowRe=new RegExp("<"+escRe(p)+"row\\b([^>]*)\\br=\""+row+"\"([^>]*)>([\\s\\S]*?)<\\/"+escRe(p)+"row>"),rm=xml.match(rowRe);if(rm){var inner=rm[3],selfRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\""+escRe(address)+"\")[^>]*\\/>"),normRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\""+escRe(address)+"\")[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"c>"),old=inner.match(selfRe)||inner.match(normRe),style=null;if(old){var sm=old[0].match(/\bs=\"([^\"]+)\"/);style=sm?sm[1]:null;inner=(value!==null&&value!==undefined&&value!=="")?inner.replace(old[0],cell(address,value,type,style,p)):inner.replace(old[0],"")}else if(value!==null&&value!==undefined&&value!==""){inner+=cell(address,value,type,null,p)}var replacement=rm[0].replace(rm[3],inner);return xml.replace(rowRe,replacement)}if(value===null||value===undefined||value==="")return xml;var close="</"+p+"sheetData>",pos=xml.indexOf(close);if(pos<0)throw new Error("Excelシート構造が不正です");return xml.slice(0,pos)+"<"+p+"row r=\""+row+"\">"+cell(address,value,type,null,p)+"</"+p+"row>"+xml.slice(pos)}
+function cell(address,value,type,style,p){var s=style?" s=\""+style+"\"":"";if(type==="number")return"<"+p+"c r=\""+address+"\""+s+"><"+p+"v>"+Number(value)+"</"+p+"v></"+p+"c>";return"<"+p+"c r=\""+address+"\""+s+" t=\"inlineStr\"><"+p+"is><"+p+"t xml:space=\"preserve\">"+escXml(String(value))+"</"+p+"t></"+p+"is></"+p+"c>"}
+function escXml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
+function escRe(s){return s.replace(/[.*+?^$(){}|[\]\\]/g,"\\$&")}
+function forceCalc(xml){var p=prefix(xml,"workbook"),re=new RegExp("<"+escRe(p)+"calcPr\\b[^>]*\\/>"),c="<"+p+"calcPr calcMode=\"auto\" fullCalcOnLoad=\"1\" forceFullCalc=\"1\"/>";return re.test(xml)?xml.replace(re,c):xml.replace("</"+p+"workbook>",c+"</"+p+"workbook>")}
+function download(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500)}
+</script>
+</body>
+</html>
