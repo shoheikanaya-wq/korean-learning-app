@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build signed Android APK
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,26 +18,59 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Install Korean launcher icon
+
+      - name: Require private signing secrets
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          SP: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KA: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KP: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          mkdir -p android/app/src/main/res/drawable
-          cp icons/icon-512.png android/app/src/main/res/drawable/korean_icon.png
-      - name: Build installable debug APK
+          set -euo pipefail
+          test -n "$KS"
+          test -n "$SP"
+          test -n "$KA"
+          test -n "$KP"
+
+      - name: Restore signing keystore
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KS" | base64 --decode > "$RUNNER_TEMP/korean-release.jks"
+          test -s "$RUNNER_TEMP/korean-release.jks"
+
+      - name: Install launcher icon
+        run: cp icons/icon-512.png android/app/src/main/res/drawable/korean_icon.png
+
+      - name: Build signed release APK
         working-directory: android
-        run: gradle assembleDebug
-      - name: Validate APK
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/korean-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle --no-daemon assembleRelease
+
+      - name: Validate signed APK
         run: |
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/release/app-release.apk
           test -s "$APK"
           unzip -t "$APK"
-          ls -lh "$APK"
+          keytool -printcert -jarfile "$APK" | sed -n '1,12p'
           sha256sum "$APK"
-          echo "Android shell version:"
-          grep -E "version(Code|Name)" android/app/build.gradle
-      - name: Prepare friendly APK filename
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk korean-learning-app.apk
+          cp "$APK" korean-app-mugunghwa.apk
+
       - uses: actions/upload-artifact@v4
         with:
-          name: korean-learning-app-apk
-          path: korean-learning-app.apk
+          name: korean-app-mugunghwa-signed
+          path: korean-app-mugunghwa.apk
           if-no-files-found: error
+
+      - name: Publish stable signed APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view android-stable >/dev/null 2>&1 || gh release create android-stable --title "韓国語アプリ Android安定版"
+          gh release upload android-stable korean-app-mugunghwa.apk --clobber
+          gh release edit android-stable --notes "固定署名 Android APK Ver.3.14.45。今後の更新も同じ署名鍵を使用します。"
