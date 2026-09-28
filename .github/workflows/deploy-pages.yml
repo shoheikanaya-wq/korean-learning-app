@@ -32,3 +32,37 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify published PWA endpoints
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          BASE="${PAGE_URL%/}"
+          echo "BASE=$BASE"
+          sleep 8
+
+          check() {
+            local url="$1"
+            local expect="$2"
+            echo
+            echo "=== $url ==="
+            curl -fsSL --retry 4 --retry-delay 2 -D /tmp/headers "$url" -o /tmp/body
+            cat /tmp/headers
+            grep -Ei '^content-type:' /tmp/headers || true
+            grep -Eq "$expect" /tmp/headers
+            wc -c /tmp/body
+          }
+
+          check "$BASE/" 'content-type:.*text/html'
+          check "$BASE/manifest.webmanifest" 'content-type:.*(application/manifest\+json|application/json|application/octet-stream|text/plain)'
+          node - <<'NODE'
+          const fs=require('fs');
+          const m=JSON.parse(fs.readFileSync('/tmp/body','utf8'));
+          console.log(m);
+          NODE
+
+          check "$BASE/icons/icon-192.png" 'content-type:.*image/png'
+          file /tmp/body
+          check "$BASE/icons/icon-512.png" 'content-type:.*image/png'
+          file /tmp/body
+          check "$BASE/?source=pwa" 'content-type:.*text/html'
