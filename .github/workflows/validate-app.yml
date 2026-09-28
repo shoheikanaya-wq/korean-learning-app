@@ -56,6 +56,16 @@ jobs:
           if(total<45) throw new Error(`Too few total lessons: ${total}`);
           console.log(`Validated ${total} lessons`);
           NODE
+      - name: Validate PWA asset dimensions
+        run: |
+          file icons/icon-192.png | tee /tmp/icon192.txt
+          file icons/icon-512.png | tee /tmp/icon512.txt
+          file screenshots/home.jpg | tee /tmp/home-shot.txt
+          file screenshots/lesson.jpg | tee /tmp/lesson-shot.txt
+          grep -Eq '192 x 192|192x192' /tmp/icon192.txt
+          grep -Eq '512 x 512|512x512' /tmp/icon512.txt
+          grep -Eq '320 x 500|320x500' /tmp/home-shot.txt
+          grep -Eq '320 x 500|320x500' /tmp/lesson-shot.txt
       - name: Validate service worker
         run: |
           grep -Eq "const CACHE='kor-practice-v[0-9]+'" sw.js
