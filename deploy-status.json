@@ -1,5 +1,8 @@
 {
-  "commit": "c6e3e15ecee061a8a2e304f9aeb190b4a874d42d",
+  "commit": "6af123ce2d1110ca1afb037bcba5c269fcac0210",
+  "wif_present": "false",
+  "service_account_present": "false",
+  "project_present": "false",
   "auth": "failure",
   "gcloud": "skipped",
   "preflight": "skipped",
