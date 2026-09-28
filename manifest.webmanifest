@@ -53,5 +53,21 @@
         }
       ]
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/korean-learning-app/screenshots/home.svg",
+      "sizes": "1080x1920",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "韓国語アプリのホーム画面"
+    },
+    {
+      "src": "/korean-learning-app/screenshots/lesson.svg",
+      "sizes": "1080x1920",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "聞く・話す・書く・会話の学習画面"
+    }
   ]
 }
