@@ -37,6 +37,8 @@ jobs:
           unzip -t "$APK"
           ls -lh "$APK"
           sha256sum "$APK"
+          echo "Android shell version:"
+          grep -E "version(Code|Name)" android/app/build.gradle
       - name: Prepare friendly APK filename
         run: cp android/app/build/outputs/apk/debug/app-debug.apk korean-learning-app.apk
       - uses: actions/upload-artifact@v4
@@ -51,3 +53,4 @@ jobs:
           gh release view android-latest >/dev/null 2>&1 || \
             gh release create android-latest --title "韓国語アプリ Android版" --notes "スマホにインストールして専用アイコンから起動できるAndroid APKです。"
           gh release upload android-latest korean-learning-app.apk --clobber
+          gh release edit android-latest --notes "Androidアプリ本体 Ver.3.14.44。起動時に最新の韓国語教材を読み込みます。"
