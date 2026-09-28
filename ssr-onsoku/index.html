@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel出力　<span style="font-size:12px;color:#7a8691">v1.4</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel出力　<span style="font-size:12px;color:#7a8691">v1.5</span></p></div></header>
 
 <section class="card">
 <div class="section-title">初回だけ：Excel雛形</div>
@@ -112,7 +112,7 @@ function jpDate(x){return x?x.y+"年"+x.m+"月"+x.d+"日":"-"}
 function temp(v){return Number.isFinite(v)?v.toFixed(1)+"℃":"--"}
 function num(v){return Number.isFinite(v)?v.toFixed(1):"-"}
 function factoryText(f){var a=[];[1,2,3].forEach(function(i){if(Number.isFinite(f[i]))a.push(["①","②","③"][i-1]+f[i].toFixed(1)+"℃")});return a.join("　")}
-function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent=factoryText(p.factories)||"構内温度：未入力（すべてスルー）";$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":(r.status==="スルー"?"warn":"ng"),countText=r.count===0?"-":r.count+"/"+r.expected;tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+countText+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"入力済みデータは正常：Excel出力可能":(p.warnings[0]||"数値が1件以上あるのに必要数と合わない機台だけNGです")}
+function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent=factoryText(p.factories)||"構内温度：未入力（すべてスルー）";$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":(r.status==="スルー"?"warn":"ng"),countText=r.count===0?"-":r.count+"/"+r.expected;tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+countText+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"出力可能：未測定・一部入力は空欄を残して出力します":(p.warnings[0]||"必要数より多い数値がある機台だけNGです")}
 function updateExportState(){$("exportButton").disabled=!(templateReady&&current&&current.parsed&&current.parsed.canExport)}
 function show(msg,err){$("message").textContent=msg;$("message").style.color=err?"#b42318":"#4f5963"}
 async function exportExcel(){if(!templateReady||!current||!current.parsed.canExport)return;$("exportButton").disabled=true;show("Excelを作成中…");try{var t=await loadTemplate();if(!t)throw new Error("雛形がありません");var zip=await JSZip.loadAsync(t.buf),wbXml=await zip.file("xl/workbook.xml").async("string"),relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string"),path=resolveSheet(wbXml,relXml,"リレー配置と測定温度記入シート"),xml=await zip.file(path).async("string"),p=current.parsed;xml=setCell(xml,"O1",jpDate(p.date),"string");var ft=factoryText(p.factories);xml=setCell(xml,"S1",ft||null,"string");xml=setCell(xml,"V1",null,"string");
