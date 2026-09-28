@@ -1,0 +1,10 @@
+{
+  "commit": "c6e3e15ecee061a8a2e304f9aeb190b4a874d42d",
+  "auth": "failure",
+  "gcloud": "skipped",
+  "preflight": "skipped",
+  "deploy": "skipped",
+  "service": "skipped",
+  "connect": "skipped",
+  "service_url": ""
+}
