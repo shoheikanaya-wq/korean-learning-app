@@ -1,0 +1,23 @@
+{
+  "id": "/korean-learning-app/pwa-test/",
+  "name": "PWA 最小テスト",
+  "short_name": "PWAテスト",
+  "start_url": "/korean-learning-app/pwa-test/",
+  "scope": "/korean-learning-app/pwa-test/",
+  "display": "standalone",
+  "background_color": "#f5f1e8",
+  "theme_color": "#65584d",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/korean-learning-app/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/korean-learning-app/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
