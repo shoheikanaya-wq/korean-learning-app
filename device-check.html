@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#65584d">
+<title>韓国語アプリ 実機チェック</title>
+<style>
+*{box-sizing:border-box}
+:root{font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;color:#2e2925;background:#f3efe6}
+body{margin:0;padding:16px;max-width:680px;margin:auto}
+main{background:#fffdf8;border:2px solid #b9aa98;border-radius:22px;padding:18px}
+h1{font-size:28px;margin:0 0 8px}
+.lead{font-size:19px;font-weight:800;line-height:1.55}
+.status{padding:12px;border-radius:14px;background:#f4eee4;font-size:17px;font-weight:800;line-height:1.5}
+.item{margin:14px 0;padding:14px;border:2px solid #c8bbaa;border-radius:16px;background:#fff}
+.item h2{font-size:22px;margin:0 0 7px}
+.item p{font-size:17px;line-height:1.5;margin:0 0 10px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button,a{font:inherit}
+.actions button,.wide{min-height:58px;border:2px solid #65584d;border-radius:14px;font-size:19px;font-weight:900}
+.ok{background:#e9f5ea;color:#214d29}.ng{background:#fff0ef;color:#84231c}
+.actions button.on{outline:4px solid #65584d}
+.wide{width:100%;margin-top:10px;background:#65584d;color:#fff}
+.secondary{background:#fff;color:#51453c}
+.result{margin-top:14px;padding:12px;border-radius:14px;background:#eef4f8;font-size:18px;font-weight:900;line-height:1.5}
+small{font-size:14px;color:#65584d}
+</style>
+</head>
+<body>
+<main>
+<h1>韓国語アプリ 実機チェック</h1>
+<p class="lead">インストール後、この6項目だけ確認してください。<br>1項目ずつ「できた／できない」を押せばOKです。</p>
+<p class="status" id="env">端末状態を確認中…</p>
+
+<div id="list"></div>
+
+<div class="result" id="result">0 / 6 項目確認済み</div>
+<button class="wide" id="copy">確認結果をコピー</button>
+<button class="wide secondary" id="reset">チェックをやり直す</button>
+<a class="wide secondary" href="./" style="display:grid;place-items:center;text-decoration:none">韓国語アプリを開く</a>
+<p><small>結果はこの端末だけに保存されます。自動送信はしません。</small></p>
+</main>
+<script>
+(()=>{
+const tests=[
+ ['インストール','ホーム画面に「韓国語」アイコンが出て、そのアイコンから起動できる'],
+ ['音声再生','「聞く」を押して韓国語のお手本音声が聞こえる'],
+ ['マイク','「話す」を押してマイク許可後、韓国語を聞き取れる'],
+ ['書く練習','「指で書く」で線が指についてきて書ける'],
+ ['画面移動','ホーム／日常／旅行／仕事をタップして正常に移動できる'],
+ ['オフライン','一度開いた後、機内モードでも教材画面が表示できる']
+];
+const key='korDeviceChecklist-v1';
+let state={};try{state=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+const list=document.getElementById('list'),result=document.getElementById('result');
+function save(){localStorage.setItem(key,JSON.stringify(state))}
+function render(){
+ list.innerHTML=tests.map((t,i)=>{
+  const v=state[i]||'';
+  return '<section class="item"><h2>'+(i+1)+'．'+t[0]+'</h2><p>'+t[1]+'</p><div class="actions">'+
+   '<button class="ok '+(v==='ok'?'on':'')+'" data-i="'+i+'" data-v="ok">✓ できた</button>'+
+   '<button class="ng '+(v==='ng'?'on':'')+'" data-i="'+i+'" data-v="ng">× できない</button>'+
+  '</div></section>'
+ }).join('');
+ document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{state[b.dataset.i]=b.dataset.v;save();render()});
+ const done=tests.filter((_,i)=>state[i]).length;
+ const ok=tests.filter((_,i)=>state[i]==='ok').length;
+ result.textContent=done+' / '+tests.length+' 項目確認済み　✓ '+ok+'　× '+(done-ok);
+}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.getElementById('env').textContent=
+ '通信：'+(navigator.onLine?'オンライン':'オフライン')+
+ ' ／ 音声再生：'+('speechSynthesis'in window?'対応':'要確認')+
+ ' ／ 音声認識：'+(SR?'対応':'アプリ内で確認')+
+ ' ／ 画面：'+screen.width+'×'+screen.height;
+document.getElementById('copy').onclick=async()=>{
+ const lines=tests.map((t,i)=>(i+1)+' '+t[0]+'：'+(state[i]==='ok'?'できた':state[i]==='ng'?'できない':'未確認'));
+ const text='韓国語アプリ 実機チェック\nVer.3.14.44\n'+lines.join('\n');
+ try{await navigator.clipboard.writeText(text);result.textContent='確認結果をコピーしました。この会話に貼り付けてください。'}catch(e){result.textContent='コピーできない場合は、この画面をスクリーンショットしてください。'}
+};
+document.getElementById('reset').onclick=()=>{state={};save();render()};
+render();
+})();
+</script>
+</body>
+</html>
