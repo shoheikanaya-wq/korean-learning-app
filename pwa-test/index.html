@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#65584d">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>PWA最小テスト</title>
+<style>
+body{font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;max-width:680px;margin:auto;padding:24px;background:#f5f1e8;color:#211d19}
+.card{background:white;border:3px solid #4e463e;border-radius:22px;padding:20px}
+h1{font-size:34px}p,div{font-size:22px;line-height:1.6}.ok{color:#217a3b;font-weight:900}.wait{color:#a63b32;font-weight:900}
+button{width:100%;min-height:70px;font-size:24px;font-weight:900;border:3px solid #4e463e;border-radius:18px;background:#fff5d7}
+</style>
+<script>
+window.__bip=false;
+window.addEventListener('beforeinstallprompt',()=>{window.__bip=true;localStorage.setItem('pwaTestBip','1')},{capture:true});
+window.addEventListener('appinstalled',()=>localStorage.setItem('pwaTestInstalled','1'),{capture:true});
+</script>
+</head>
+<body>
+<div class="card">
+<h1>PWA 最小テスト</h1>
+<p>このページは、韓国語アプリ本体とは別の最小構成テストです。</p>
+<button id="tap">① ここを1回タップ</button>
+<p>② このページを30秒以上開いたままにしてください。</p>
+<div id="time" class="wait">0 / 30秒</div>
+<div id="event" class="wait">インストール候補：未検出</div>
+<p>③ 30秒後、Chrome右上︙ →「ホーム画面に追加」を開きます。</p>
+</div>
+<script>
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+let start=Date.now();
+document.getElementById('tap').onclick=()=>{localStorage.setItem('pwaTestTapped','1');};
+setInterval(()=>{
+ const s=Math.floor((Date.now()-start)/1000);
+ const t=document.getElementById('time');
+ t.textContent=Math.min(s,30)+' / 30秒'+(s>=30?'　OK':'');
+ t.className=s>=30?'ok':'wait';
+ const seen=window.__bip||localStorage.getItem('pwaTestBip')==='1';
+ const e=document.getElementById('event');
+ e.textContent='インストール候補：'+(seen?'検出済み':'未検出');
+ e.className=seen?'ok':'wait';
+},1000);
+</script>
+</body>
+</html>
