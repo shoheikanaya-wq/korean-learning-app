@@ -8,7 +8,26 @@ android {
         applicationId 'jp.sk.koreanlearning'
         minSdk 26
         targetSdk 35
-        versionCode 4
-        versionName '3.14.44'
+        versionCode 5
+        versionName '3.14.45'
+    }
+
+    signingConfigs {
+        release {
+            def keyPath = System.getenv('ANDROID_KEYSTORE_PATH')
+            if (keyPath) {
+                storeFile file(keyPath)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
     }
 }
