@@ -15,14 +15,16 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.1</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.2</span></p></div></header>
 
 <section class="card">
-<div class="section-title">初回だけ：Excel雛形</div>
-<label class="action" for="templateInput">Excel雛形を登録 / 交換</label>
+<div class="section-title">Excel雛形</div>
+<div id="templateStatus" class="statusline template-ok">標準雛形：読み込み中…</div>
+<details style="margin-top:10px"><summary>必要なときだけ雛形を交換</summary>
+<label class="action" for="templateInput" style="margin-top:10px">別のExcel雛形を登録</label>
 <input id="templateInput" class="hidden-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-<div id="templateStatus" class="statusline template-ng">雛形：未登録</div>
-<p class="small">会社で使う温測シートの雛形を1回登録すると、このスマホ内に保存します。出力時も雛形の枠線・書式を残したまま測定値だけ反映します。測定データも雛形も外部サーバーへ送信しません。</p>
+</details>
+<p class="small">標準雛形はアプリに内蔵済みです。通常はWordを選ぶだけで、元の枠線・書式を残したExcelへ測定値を反映します。</p>
 </section>
 
 <section class="card">
@@ -30,7 +32,7 @@
 <label class="file-button" for="docxInput">Wordを選択</label>
 <input id="docxInput" class="hidden-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
 <div id="fileName" class="statusline">Word：未選択</div>
-<p class="small">例：20261001.docx / 25.10.30-1.docx。構内温度や未測定の機台は空欄のままスルーします。途中まで数値が入った機台だけNGになります。</p>
+<p class="small">例：20261001.docx / 25.10.30-1.docx。構内温度欠け、未測定機台、途中入力はスルー扱いで、入っている分だけExcelへ反映します。</p>
 </section>
 
 <section id="summaryCard" class="card" hidden>
@@ -48,7 +50,7 @@
 <section id="detailsCard" class="card" hidden><details><summary>Wordの読み取り内容を見る</summary><pre id="rawText"></pre></details></section>
 
 <button id="exportButton" class="action primary" disabled>Excelを保存</button>
-<div id="message" class="message">初回はExcel雛形を登録してください。</div>
+<div id="message" class="message">Wordを選択してください。</div>
 
 <section class="card">
 <div class="section-title">ホーム画面へ追加</div>
@@ -88,19 +90,21 @@ document.addEventListener("DOMContentLoaded",function(){
  $("templateInput").addEventListener("change",registerTemplate);
  $("docxInput").addEventListener("change",readWord);
  $("exportButton").addEventListener("click",exportExcel);
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=7").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=22").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now()},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
-async function loadTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
-async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent=t?"雛形：登録済み（"+t.name+"）":"雛形：未登録";$("templateStatus").className="statusline "+(t?"template-ok":"template-ng");updateExportState()}catch(e){show("雛形保存領域を確認できません。",true)}}
+async function loadCustomTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
+async function loadBuiltInTemplate(){var parts=[];for(var i=1;i<=7;i++){var r=await fetch("./template/part"+String(i).padStart(2,"0")+".txt",{cache:"no-store"});if(!r.ok)throw new Error("標準雛形を取得できません");parts.push((await r.text()).trim())}var b64=parts.join(""),bin=atob(b64),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);return{buf:u8.buffer,name:"標準雛形（内蔵）",builtIn:true}}
+async function loadTemplate(){var custom=await loadCustomTemplate();return custom||await loadBuiltInTemplate()}
+async function checkTemplate(){try{var custom=await loadCustomTemplate();var t=custom||await loadBuiltInTemplate();templateReady=!!t;$("templateStatus").textContent=custom?"雛形：個別登録済み（"+custom.name+"）":"標準雛形：内蔵済み";$("templateStatus").className="statusline template-ok";updateExportState()}catch(e){templateReady=false;$("templateStatus").textContent="標準雛形：読み込み失敗";$("templateStatus").className="statusline template-ng";show("標準雛形を読み込めません。通信状態を確認してください。",true)}}
 async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
-async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを保存できます。":"読み取りOK。初回だけExcel雛形を登録してください。"):"赤い項目を確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
+async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを保存できます。":"標準雛形を読み込み中です。"):"日付だけ確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
 async function extractDocx(file){if(!/\.docx$/i.test(file.name))throw new Error("docxファイルを選択してください");var zip=await JSZip.loadAsync(await file.arrayBuffer());var doc=zip.file("word/document.xml");if(!doc)throw new Error("Word本文を取得できません");var xml=await doc.async("string");xml=xml.replace(/<w:tab\b[^>]*\/>/g," ").replace(/<w:br\b[^>]*\/>/g," ");var paras=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];paras.forEach(function(p){var chunks=[],re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g,m;while((m=re.exec(p)))chunks.push(decodeXml(m[1]));var t=chunks.join("").replace(/\u00a0/g," ").trim();if(t)lines.push(t)});if(!lines.length)throw new Error("Word本文が空です");return lines}
 function decodeXml(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
 function parse(lines,fileName){var machines={};ORDER.forEach(function(k){machines[k]=[]});var factories={1:null,2:null,3:null},bodyDate=null,currentMachine=null,warnings=[];lines.forEach(function(raw){var line=raw.normalize("NFKC").trim();if(!bodyDate)bodyDate=parseDateText(line);var ft=parseFactory(raw);if(ft){factories[ft.index]=ft.value;currentMachine=null;return}var mac=detectMachine(line);if(mac){currentMachine=mac;return}if(parseDateText(line)){currentMachine=null;return}if(currentMachine){var nums=line.match(/\d{2}\.\d/g)||[];nums.forEach(function(x){machines[currentMachine].push(Number(x))})}});
 var fileDate=parseDateFile(fileName),finalDate=fileDate||bodyDate,dateOk=!!finalDate,dateStatus="OK";if(!finalDate){dateStatus="日付なし"}else if(fileDate&&bodyDate&&dateKey(fileDate)!==dateKey(bodyDate)){dateStatus="不一致";dateOk=false;warnings.push("ファイル名と本文の日付が一致しません")}else if(fileDate&&bodyDate){dateStatus="一致"}else if(fileDate){dateStatus="ファイル名"}else{dateStatus="本文"}
-var results={},machineOk=true;ORDER.forEach(function(k){var vals=machines[k],status;if(!vals.length)status="スルー";else if(vals.length===EXPECTED[k])status="OK";else{status="NG";machineOk=false}results[k]={values:vals,count:vals.length,expected:EXPECTED[k],upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>1?vals.slice(2):[],status:status}});
+var results={},machineOk=true;ORDER.forEach(function(k){var rawVals=machines[k],vals=rawVals.slice(0,EXPECTED[k]),status;if(!rawVals.length)status="未測定スルー";else if(rawVals.length===EXPECTED[k])status="OK";else if(rawVals.length<EXPECTED[k])status="一部入力";else status="超過分スルー";results[k]={values:vals,count:rawVals.length,expected:EXPECTED[k],upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>1?vals.slice(2):[],status:status}});
 return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,date:finalDate,dateStatus:dateStatus,dateOk:dateOk,machineOk:machineOk,canExport:dateOk,warnings:warnings}}
 function detectMachine(line){var n=line.normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/[‐‑‒–—―−－]/g,"-");var a=["FM83-1","FM83-2","MM18","FM81","FM84","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];for(var i=0;i<a.length;i++)if(n.indexOf(a[i])>=0)return a[i];return null}
 function parseFactory(raw){var o=raw.trim(),n=o.normalize("NFKC"),idx=null;if(/[①]|まるいち|マルイチ|丸一|〇一|○1/i.test(o)||/まるいち|マルイチ|丸一|〇一|○1/i.test(n))idx=1;if(/[②]|まるに|マルニ|丸二|〇二|○2/i.test(o)||/まるに|マルニ|丸二|〇二|○2/i.test(n))idx=2;if(/[③]|まるさん|マルサン|丸三|〇三|○3/i.test(o)||/まるさん|マルサン|丸三|〇三|○3/i.test(n))idx=3;if(!idx)return null;var m=n.match(/\d{2}\.\d/);return{index:idx,value:m?Number(m[0]):null}}
@@ -112,7 +116,7 @@ function jpDate(x){return x?x.y+"年"+x.m+"月"+x.d+"日":"-"}
 function temp(v){return Number.isFinite(v)?v.toFixed(1)+"℃":"--"}
 function num(v){return Number.isFinite(v)?v.toFixed(1):"-"}
 function factoryText(f){var a=[];[1,2,3].forEach(function(i){if(Number.isFinite(f[i]))a.push(["①","②","③"][i-1]+f[i].toFixed(1)+"℃")});return a.join("　")}
-function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent=factoryText(p.factories)||"構内温度：未入力（すべてスルー）";$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":(r.status==="スルー"?"warn":"ng"),countText=r.count===0?"-":r.count+"/"+r.expected;tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+countText+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"出力可能：未測定・不足・超過・構内温度欠けはすべてスルーして出力します":"日付だけ確認してください"}
+function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent=factoryText(p.factories)||"構内温度：未入力（すべてスルー）";$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":"warn",countText=r.count===0?"-":r.count+"/"+r.expected;tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+countText+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"出力可能：未測定・不足・超過・構内温度欠けはすべてスルーして出力します":"日付だけ確認してください"}
 function updateExportState(){$("exportButton").disabled=!(templateReady&&current&&current.parsed&&current.parsed.canExport)}
 function show(msg,err){$("message").textContent=msg;$("message").style.color=err?"#b42318":"#4f5963"}
 async function exportExcel(){if(!templateReady||!current||!current.parsed.canExport)return;$("exportButton").disabled=true;show("Excelを作成中…");try{var t=await loadTemplate();if(!t)throw new Error("雛形がありません");var zip=await JSZip.loadAsync(t.buf),wbXml=await zip.file("xl/workbook.xml").async("string"),relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string"),path=resolveSheet(wbXml,relXml,"リレー配置と測定温度記入シート"),xml=await zip.file(path).async("string"),p=current.parsed;xml=setCell(xml,"O1",jpDate(p.date),"string");var ft=factoryText(p.factories);xml=setCell(xml,"S1",ft||null,"string");xml=setCell(xml,"V1",null,"string");
