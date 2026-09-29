@@ -15,14 +15,14 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.0</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.1</span></p></div></header>
 
 <section class="card">
 <div class="section-title">初回だけ：Excel雛形</div>
 <label class="action" for="templateInput">Excel雛形を登録 / 交換</label>
 <input id="templateInput" class="hidden-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 <div id="templateStatus" class="statusline template-ng">雛形：未登録</div>
-<p class="small">会社で使う温測シートの雛形を1回登録すると、このスマホ内に保存します。測定データも雛形も外部サーバーへ送信しません。</p>
+<p class="small">会社で使う温測シートの雛形を1回登録すると、このスマホ内に保存します。出力時も雛形の枠線・書式を残したまま測定値だけ反映します。測定データも雛形も外部サーバーへ送信しません。</p>
 </section>
 
 <section class="card">
@@ -120,7 +120,8 @@ ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values
 function resolveSheet(wb,rels,name){var tags=wb.match(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?\s*>/g)||[],rid=null;for(var i=0;i<tags.length;i++){if(decodeXml(attr(tags[i],"name")||"")===name){rid=attr(tags[i],"r:id");break}}if(!rid)throw new Error("対象シートがありません");var rs=rels.match(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*\/?\s*>/g)||[],target=null;for(var j=0;j<rs.length;j++)if(attr(rs[j],"Id")===rid){target=attr(rs[j],"Target");break}if(!target)throw new Error("シート参照を取得できません");target=target.replace(/^\//,"");return target.indexOf("xl/")===0?target:"xl/"+target.replace(/^\.\//,"")}
 function attr(tag,name){var m=tag.match(new RegExp("(?:^|\\s)"+escRe(name)+"=\"([^\"]*)\""));return m?m[1]:null}
 function prefix(xml,root){var m=xml.match(new RegExp("<([A-Za-z_][\\w.-]*:)?"+root+"\\b"));return m&&m[1]?m[1]:""}
-function setCell(xml,address,value,type){var p=prefix(xml,"worksheet"),row=+(address.match(/\d+/)||["0"])[0],rowRe=new RegExp("<"+escRe(p)+"row\\b([^>]*)\\br=\""+row+"\"([^>]*)>([\\s\\S]*?)<\\/"+escRe(p)+"row>"),rm=xml.match(rowRe);if(rm){var inner=rm[3],selfRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\""+escRe(address)+"\")[^>]*\\/>"),normRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\""+escRe(address)+"\")[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"c>"),old=inner.match(selfRe)||inner.match(normRe),style=null;if(old){var sm=old[0].match(/\bs=\"([^\"]+)\"/);style=sm?sm[1]:null;inner=(value!==null&&value!==undefined&&value!=="")?inner.replace(old[0],cell(address,value,type,style,p)):inner.replace(old[0],"")}else if(value!==null&&value!==undefined&&value!==""){inner+=cell(address,value,type,null,p)}var replacement=rm[0].replace(rm[3],inner);return xml.replace(rowRe,replacement)}if(value===null||value===undefined||value==="")return xml;var close="</"+p+"sheetData>",pos=xml.indexOf(close);if(pos<0)throw new Error("Excelシート構造が不正です");return xml.slice(0,pos)+"<"+p+"row r=\""+row+"\">"+cell(address,value,type,null,p)+"</"+p+"row>"+xml.slice(pos)}
+function setCell(xml,address,value,type){var p=prefix(xml,"worksheet"),row=+(address.match(/\d+/)||["0"])[0],rowRe=new RegExp("<"+escRe(p)+"row\\b([^>]*)\\br=\""+row+"\"([^>]*)>([\\s\\S]*?)<\\/"+escRe(p)+"row>"),rm=xml.match(rowRe);if(rm){var inner=rm[3],selfRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\""+escRe(address)+"\")[^>]*\\/>"),normRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\""+escRe(address)+"\")[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"c>"),old=inner.match(selfRe)||inner.match(normRe),style=null;if(old){var sm=old[0].match(/\bs=\"([^\"]+)\"/);style=sm?sm[1]:null;inner=(value!==null&&value!==undefined&&value!=="")?inner.replace(old[0],cell(address,value,type,style,p)):inner.replace(old[0],emptyCellKeepingStyle(old[0],p))}else if(value!==null&&value!==undefined&&value!==""){inner+=cell(address,value,type,null,p)}var replacement=rm[0].replace(rm[3],inner);return xml.replace(rowRe,replacement)}if(value===null||value===undefined||value==="")return xml;var close="</"+p+"sheetData>",pos=xml.indexOf(close);if(pos<0)throw new Error("Excelシート構造が不正です");return xml.slice(0,pos)+"<"+p+"row r=\""+row+"\">"+cell(address,value,type,null,p)+"</"+p+"row>"+xml.slice(pos)}
+function emptyCellKeepingStyle(old,p){var m=old.match(new RegExp("^<"+escRe(p)+"c\\b([^>]*)"));if(!m)return old;var attrs=m[1].replace(/\/\s*$/,"");return"<"+p+"c"+attrs+"/>"} 
 function cell(address,value,type,style,p){var s=style?" s=\""+style+"\"":"";if(type==="number")return"<"+p+"c r=\""+address+"\""+s+"><"+p+"v>"+Number(value)+"</"+p+"v></"+p+"c>";return"<"+p+"c r=\""+address+"\""+s+" t=\"inlineStr\"><"+p+"is><"+p+"t xml:space=\"preserve\">"+escXml(String(value))+"</"+p+"t></"+p+"is></"+p+"c>"}
 function escXml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
 function escRe(s){return s.replace(/[.*+?^$(){}|[\]\\]/g,"\\$&")}
