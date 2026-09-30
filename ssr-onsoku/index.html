@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.2</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.3</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -24,7 +24,7 @@
 <label class="action" for="templateInput" style="margin-top:10px">別のExcel雛形を登録</label>
 <input id="templateInput" class="hidden-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 </details>
-<p class="small">標準雛形はアプリに内蔵済みです。通常はWordを選ぶだけで、元の枠線・書式を残したExcelへ測定値を反映します。</p>
+<p class="small">標準雛形はアプリに内蔵済みです。通常はWordを選ぶだけで、元の枠線・書式を残したExcelへ測定値を反映します。さらに「縦データ」シートを自動作成し、機台名を横方向、各測定値を縦方向に並べます。</p>
 </section>
 
 <section class="card">
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("templateInput").addEventListener("change",registerTemplate);
  $("docxInput").addEventListener("change",readWord);
  $("exportButton").addEventListener("click",exportExcel);
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=22").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=23").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now()},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -120,7 +120,48 @@ function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=f
 function updateExportState(){$("exportButton").disabled=!(templateReady&&current&&current.parsed&&current.parsed.canExport)}
 function show(msg,err){$("message").textContent=msg;$("message").style.color=err?"#b42318":"#4f5963"}
 async function exportExcel(){if(!templateReady||!current||!current.parsed.canExport)return;$("exportButton").disabled=true;show("Excelを作成中…");try{var t=await loadTemplate();if(!t)throw new Error("雛形がありません");var zip=await JSZip.loadAsync(t.buf),wbXml=await zip.file("xl/workbook.xml").async("string"),relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string"),path=resolveSheet(wbXml,relXml,"リレー配置と測定温度記入シート"),xml=await zip.file(path).async("string"),p=current.parsed;xml=setCell(xml,"O1",jpDate(p.date),"string");var ft=factoryText(p.factories);xml=setCell(xml,"S1",ft||null,"string");xml=setCell(xml,"V1",null,"string");
-ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);wbXml=forceCalc(wbXml);zip.file("xl/workbook.xml",wbXml);var blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";var file=new File([blob],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});var saved=await saveExcelFile(file);if(saved)show(name+" を保存しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
+ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);var vr=await upsertVerticalSheet(zip,wbXml,relXml,p);wbXml=vr.wbXml;relXml=vr.relXml;zip.file("xl/_rels/workbook.xml.rels",relXml);wbXml=forceCalc(wbXml);zip.file("xl/workbook.xml",wbXml);var blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";var file=new File([blob],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});var saved=await saveExcelFile(file);if(saved)show(name+" を保存しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
+async function upsertVerticalSheet(zip,wb,rels,p){
+  var name="縦データ",existing=tryResolveSheet(wb,rels,name),sheetXml=buildVerticalSheetXml(p);
+  if(existing){zip.file(existing,sheetXml);return{wbXml:wb,relXml:rels}}
+  var tags=wb.match(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?\s*>/g)||[],maxSheetId=0,maxRid=0;
+  for(var i=0;i<tags.length;i++){maxSheetId=Math.max(maxSheetId,+(attr(tags[i],"sheetId")||0));var rm=(attr(tags[i],"r:id")||"").match(/rId(\d+)/);if(rm)maxRid=Math.max(maxRid,+rm[1])}
+  var rs=rels.match(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*\/?\s*>/g)||[];
+  for(var j=0;j<rs.length;j++){var rr=(attr(rs[j],"Id")||"").match(/rId(\d+)/);if(rr)maxRid=Math.max(maxRid,+rr[1])}
+  var maxSheetNo=0;Object.keys(zip.files).forEach(function(k){var m=k.match(/^xl\/worksheets\/sheet(\d+)\.xml$/);if(m)maxSheetNo=Math.max(maxSheetNo,+m[1])});
+  var sheetNo=maxSheetNo+1,newPath="xl/worksheets/sheet"+sheetNo+".xml",rid="rId"+(maxRid+1),sheetId=maxSheetId+1,wp=prefix(wb,"workbook"),rp=prefix(rels,"Relationships");
+  wb=wb.replace("</"+wp+"sheets>","<"+wp+"sheet name=\""+escXml(name)+"\" sheetId=\""+sheetId+"\" r:id=\""+rid+"\"/></"+wp+"sheets>");
+  rels=rels.replace("</"+rp+"Relationships>","<"+rp+"Relationship Id=\""+rid+"\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet"+sheetNo+".xml\"/></"+rp+"Relationships>");
+  var ct=await zip.file("[Content_Types].xml").async("string"),tp=prefix(ct,"Types");
+  ct=ct.replace("</"+tp+"Types>","<"+tp+"Override PartName=\"/"+newPath+"\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/></"+tp+"Types>");
+  zip.file("[Content_Types].xml",ct);zip.file(newPath,sheetXml);
+  return{wbXml:wb,relXml:rels}
+}
+function tryResolveSheet(wb,rels,name){try{return resolveSheet(wb,rels,name)}catch(e){return null}}
+function colName(n){var s="";while(n>0){n--;s=String.fromCharCode(65+n%26)+s;n=Math.floor(n/26)}return s}
+function buildVerticalSheetXml(p){
+  var maxSsr=0;ORDER.forEach(function(k){maxSsr=Math.max(maxSsr,EXPECTED[k]-2)});
+  var lastCol=colName(ORDER.length+1),rows=[],head=cell("A1","項目","string",null,"");
+  for(var cidx=0;cidx<ORDER.length;cidx++)head+=cell(colName(cidx+2)+"1",ORDER[cidx],"string",null,"");
+  rows.push("<row r=\"1\" ht=\"22\" customHeight=\"1\">"+head+"</row>");
+  for(var ri=0;ri<maxSsr+2;ri++){
+    var rowNo=ri+2,label=ri===0?"盤内温度 上":ri===1?"盤内温度 下":"SSR"+String(ri-1).padStart(2,"0"),cells=cell("A"+rowNo,label,"string",null,"");
+    for(var mi=0;mi<ORDER.length;mi++){
+      var r=p.machines[ORDER[mi]],v=ri===0?r.upper:(ri===1?r.lower:r.ssr[ri-2]);
+      if(Number.isFinite(v))cells+=cell(colName(mi+2)+rowNo,v,"number",null,"")
+    }
+    rows.push("<row r=\""+rowNo+"\">"+cells+"</row>")
+  }
+  return'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<dimension ref="A1:'+lastCol+(maxSsr+3)+'"/>'+
+    '<sheetViews><sheetView workbookViewId="0"><pane xSplit="1" ySplit="1" topLeftCell="B2" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>'+
+    '<sheetFormatPr defaultRowHeight="18"/>'+
+    '<cols><col min="1" max="1" width="18" customWidth="1"/><col min="2" max="'+(ORDER.length+1)+'" width="12" customWidth="1"/></cols>'+
+    '<sheetData>'+rows.join("")+'</sheetData>'+
+    '<autoFilter ref="A1:'+lastCol+'1"/>'+
+    '</worksheet>'
+}
 function resolveSheet(wb,rels,name){var tags=wb.match(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?\s*>/g)||[],rid=null;for(var i=0;i<tags.length;i++){if(decodeXml(attr(tags[i],"name")||"")===name){rid=attr(tags[i],"r:id");break}}if(!rid)throw new Error("対象シートがありません");var rs=rels.match(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*\/?\s*>/g)||[],target=null;for(var j=0;j<rs.length;j++)if(attr(rs[j],"Id")===rid){target=attr(rs[j],"Target");break}if(!target)throw new Error("シート参照を取得できません");target=target.replace(/^\//,"");return target.indexOf("xl/")===0?target:"xl/"+target.replace(/^\.\//,"")}
 function attr(tag,name){var m=tag.match(new RegExp("(?:^|\\s)"+escRe(name)+"=\"([^\"]*)\""));return m?m[1]:null}
 function prefix(xml,root){var m=xml.match(new RegExp("<([A-Za-z_][\\w.-]*:)?"+root+"\\b"));return m&&m[1]?m[1]:""}
