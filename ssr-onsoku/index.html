@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.5</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.6</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -24,7 +24,7 @@
 <label class="action" for="templateInput" style="margin-top:10px">別のExcel雛形を登録</label>
 <input id="templateInput" class="hidden-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 </details>
-<p class="small">標準雛形はアプリに内蔵済みです。Word読込み後、アプリ内で「横データ」「縦データ」を切り替えて確認できます。未測定機台はスルーし、途中入力の機台は不足数を表示します。</p>
+<p class="small">標準雛形はアプリに内蔵済みです。Word読込み後、アプリ内で「横データ」「縦データ」を切り替えて確認できます。Excel保存は1回だけで、出力ファイルには「リレー配置と測定温度記入シート」と「縦データ」の2シートを作成します。</p>
 </section>
 
 <section class="card">
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=25").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=26").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now()},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -126,7 +126,7 @@ function renderVertical(p){var complete=ORDER.filter(function(k){return p.machin
 function updateExportState(){$("exportButton").disabled=!(templateReady&&current&&current.parsed&&current.parsed.canExport)}
 function show(msg,err){$("message").textContent=msg;$("message").style.color=err?"#b42318":"#4f5963"}
 async function exportExcel(){if(!templateReady||!current||!current.parsed.canExport)return;$("exportButton").disabled=true;show("Excelを作成中…");try{var t=await loadTemplate();if(!t)throw new Error("雛形がありません");var zip=await JSZip.loadAsync(t.buf),wbXml=await zip.file("xl/workbook.xml").async("string"),relXml=await zip.file("xl/_rels/workbook.xml.rels").async("string"),path=resolveSheet(wbXml,relXml,"リレー配置と測定温度記入シート"),xml=await zip.file(path).async("string"),p=current.parsed;xml=setCell(xml,"O1",jpDate(p.date),"string");var ft=factoryText(p.factories);xml=setCell(xml,"S1",ft||null,"string");xml=setCell(xml,"V1",null,"string");
-ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);wbXml=forceCalc(wbXml);zip.file("xl/workbook.xml",wbXml);var blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";var file=new File([blob],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});var saved=await saveExcelFile(file);if(saved)show(name+" を保存しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
+ORDER.forEach(function(k){var h=HEADERS[k],m=MAP[k],r=p.machines[k],has=r.values.length>0;xml=setCell(xml,h[0],"(盤内温度 上","string");xml=setCell(xml,h[1],"℃　下","string");xml=setCell(xml,h[2],"℃）","string");xml=setCell(xml,m.upper,has?r.upper:null,"number");xml=setCell(xml,m.lower,has?r.lower:null,"number");for(var i=0;i<m.ssr.length;i++)xml=setCell(xml,m.ssr[i],has&&i<r.ssr.length?r.ssr[i]:null,"number")});zip.file(path,xml);var vertical=await upsertVerticalSheet(zip,wbXml,relXml,p);wbXml=forceCalc(vertical.wbXml);relXml=vertical.relXml;zip.file("xl/workbook.xml",wbXml);zip.file("xl/_rels/workbook.xml.rels",relXml);var blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE",compressionOptions:{level:6}}),name="SSR温度測定_"+dateKey(p.date)+".xlsx";var file=new File([blob],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});var saved=await saveExcelFile(file);if(saved)show(name+" を保存しました。")}catch(e){show("Excel出力に失敗しました："+(e.message||e),true)}finally{updateExportState()}}
 async function upsertVerticalSheet(zip,wb,rels,p){
   var name="縦データ",existing=tryResolveSheet(wb,rels,name),sheetXml=buildVerticalSheetXml(p);
   if(existing){zip.file(existing,sheetXml);return{wbXml:wb,relXml:rels}}
