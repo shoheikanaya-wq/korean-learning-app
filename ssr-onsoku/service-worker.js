@@ -1,4 +1,4 @@
-const CACHE="ssr-onsoku-v37";
+const CACHE="ssr-onsoku-v38";
 const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg","./template/part01.txt","./template/part02.txt","./template/part03.txt","./template/part04.txt","./template/part05.txt","./template/part06.txt","./template/part07.txt"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
