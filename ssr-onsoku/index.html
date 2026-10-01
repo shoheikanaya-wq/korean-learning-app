@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.26</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.27</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=326").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=327").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now()},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
