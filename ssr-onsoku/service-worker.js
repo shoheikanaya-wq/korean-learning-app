@@ -1,7 +1,7 @@
-const CACHE="ssr-onsoku-v329";
-const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg","./template/part01.txt","./template/part02.txt","./template/part03.txt","./template/part04.txt","./template/part05.txt","./template/part06.txt","./template/part07.txt"];
+const CACHE="ssr-onsoku-v330";
+const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg","./template/approved-v330.txt"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
-self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("ssr-onsoku-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener("fetch",e=>{
   if(e.request.method!=="GET") return;
   if(e.request.mode==="navigate"){
