@@ -1,7 +1,7 @@
 // Original starter scenes: target, meaning, partner prompt, reply, reply meaning, coaching tip.
 window.ENGLISH_LESSONS={
 daily:[
-['Hello.','こんにちは。','Hello. How are you?','I am fine, thank you.','元気です。ありがとう。','HEL-lo の最初をはっきり。語末に「オー」を長く足しすぎない。'],
+['Hello.','こんにちは。','Hello. How are you?','I am fine, thank you.','元気です。ありがとう。','he-LLO の後ろを強めに。最初は短く弱く、お手本のリズムをまねする。'],
 ['Thank you.','ありがとう。','Here you are.','Thank you.','ありがとう。','th は舌先を前歯の間に軽く出して息を通す。「サ」だけにしない。'],
 ['Could you say that again?','もう一度言ってもらえますか？','The meeting is at ten.','Could you say that again?','もう一度言ってもらえますか？','again の後ろを強めに。全単語を同じ強さにしない。'],
 ['Please speak slowly.','ゆっくり話してください。','How can I help you today?','Please speak slowly.','ゆっくり話してください。','SPEAK と SLOW-ly をはっきり。「スピーク」の末尾に母音を足しすぎない。'],
