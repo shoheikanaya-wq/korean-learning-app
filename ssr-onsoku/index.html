@@ -28,8 +28,8 @@
 </section>
 
 <section class="card">
-<div class="section-title">普段の操作</div>
-<label class="file-button" for="docxInput">Wordを選択</label>
+
+<label class="file-button" for="docxInput">① Select Word</label>
 <input id="docxInput" class="hidden-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
 <div id="fileName" class="statusline">Word：未選択</div>
 <p class="small">例：20261001.docx / 25.10.30-1.docx。機台見出しごとにデータを分離し、構内温度・盤内温度・SSR値を確認します。不足・超過の機台は他機台から補完せずExcelへ反映しません。</p>
@@ -51,7 +51,7 @@
 
 <section id="detailsCard" class="card" hidden><details><summary>Wordの読み取り内容を見る</summary><pre id="rawText"></pre></details></section>
 
-<button id="exportButton" class="action primary" disabled>Excelを保存</button>
+<button id="exportButton" class="action primary" disabled>② Save Excel</button>
 <div id="message" class="message">Wordを選択してください。</div>
 
 <section class="card">
