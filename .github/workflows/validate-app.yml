@@ -17,6 +17,7 @@ jobs:
           test -f index.html
           test -f lessons.js
           test -f lessons-extra.js
+          test -f curriculum-v4.js
           test -f manifest.webmanifest
           test -f sw.js
       - name: Validate current app wiring
@@ -25,6 +26,8 @@ jobs:
           grep -Fq 'window.LESSONS?.[cat]' index.html
           grep -Eq '<script src="\./lessons\.js\?v=[0-9]+"></script>' index.html
           grep -Eq '<script src="\./lessons-extra\.js\?v=[0-9]+"></script>' index.html
+          grep -Eq '<script src="\./curriculum-v4\.js\?v=[0-9]+"></script>' index.html
+          ! grep -Fq '英語を練習する' index.html
           node - <<'NODE'
           const fs=require('fs');
           const m=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));
@@ -44,17 +47,24 @@ jobs:
           global.window={};
           require('./lessons.js');
           require('./lessons-extra.js');
+          require('./curriculum-v4.js');
           const D=window.LESSONS;
-          const cats=['daily','travel','business'];
+          const cats=['beginner','intermediate','daily','travel','business','advanced','super'];
           if(!D) throw new Error('window.LESSONS is missing');
           let total=0;
+          const mins={beginner:10,intermediate:20,daily:15,travel:15,business:10,advanced:15,super:15};
           for(const cat of cats){
-            if(!Array.isArray(D[cat])||D[cat].length<15) throw new Error(`Invalid category: ${cat}`);
-            for(const row of D[cat]) if(!Array.isArray(row)||row.length!==7||row.some(v=>typeof v!=='string'||!v.trim())) throw new Error(`Invalid row in ${cat}`);
+            if(!Array.isArray(D[cat])||D[cat].length<mins[cat]) throw new Error(`Invalid category: ${cat} (${D[cat]?.length||0})`);
+            for(const [n,row] of D[cat].entries()){
+              if(!Array.isArray(row)||row.length!==7||row.some(v=>typeof v!=='string'||!v.trim())) throw new Error(`Invalid row in ${cat} #${n+1}`);
+              if(!/[가-힣]/.test(row[1])) throw new Error(`No Hangul in ${cat} #${n+1}`);
+              if(!/[ぁ-んァ-ヶ一-龠]/.test(row[4])) throw new Error(`No Japanese meaning in ${cat} #${n+1}`);
+            }
             total+=D[cat].length;
           }
-          if(total<45) throw new Error(`Too few total lessons: ${total}`);
-          console.log(`Validated ${total} lessons`);
+          if(total<100) throw new Error(`Too few total lessons: ${total}`);
+          if(window.KOR_CATEGORY_KEYS?.join(',')!==cats.join(',')) throw new Error('Category order mismatch');
+          console.log(`Validated ${total} Korean lessons across ${cats.length} categories`);
           NODE
       - name: Validate PWA asset dimensions
         run: |
@@ -71,6 +81,7 @@ jobs:
           grep -Eq "const CACHE='kor-practice-v[0-9]+'" sw.js
           grep -q 'lessons.js' sw.js
           grep -q 'lessons-extra.js' sw.js
+          grep -q 'curriculum-v4.js' sw.js
           grep -q "url.origin!==self.location.origin" sw.js
           grep -q "request.mode==='navigate'" sw.js
           grep -q "cache:'no-store'" sw.js
