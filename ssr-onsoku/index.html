@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.32</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.33</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=332").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=333").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -148,25 +148,16 @@ return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,
 }
 function splitConcatenatedDecimal(tok){
  if(!/^\d+(?:\.\d)+$/.test(tok))return null;
- var dots=(tok.match(/\./g)||[]).length;
- if(dots<2)return null;
- var memo={};
- function walk(pos){
-   if(pos===tok.length)return [[]];
-   if(memo[pos])return memo[pos];
-   var ans=[];
-   for(var intLen=1;intLen<=3;intLen++){
-     var dot=pos+intLen;
-     if(dot+1>=tok.length||tok[dot]!==".")continue;
-     var piece=tok.slice(pos,dot+2);
-     if(!/^\d{1,3}\.\d$/.test(piece))continue;
-     walk(dot+2).forEach(function(rest){ans.push([piece].concat(rest))})
-   }
-   memo[pos]=ans;return ans
+ var parts=[],pos=0;
+ while(pos<tok.length){
+   var dot=tok.indexOf(".",pos);
+   if(dot<0||dot===pos||dot+1>=tok.length)return null;
+   var integerPart=tok.slice(pos,dot);
+   if(!/^\d{1,3}$/.test(integerPart))return null;
+   parts.push(Number(integerPart+"."+tok[dot+1]));
+   pos=dot+2;
  }
- var ways=walk(0);
- if(ways.length!==1)return null;
- return ways[0].map(Number)
+ return parts.length?parts:null
 }
 function tokenizeFlexible(line){
  var n=line.normalize("NFKC").replace(/[，、,;；\/|]+/g," ").replace(/[℃度]/g," ");
