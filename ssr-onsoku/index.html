@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.8</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.9</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=180").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=190").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -132,6 +132,19 @@ lines.forEach(function(raw,lineIndex){
  });
  ex.values.forEach(function(v){machines[currentMachine].push(v)});
  if(ex.invalid.length){formatErrors.push(currentMachine+"："+ex.invalid.join("、"));issues.push({machine:currentMachine,lineIndex:lineIndex,raw:raw,tokens:ex.invalid.slice()})}
+});
+// Machine-level recovery: use the known total count before diagnostics.
+ORDER.forEach(function(k){
+ var expected=EXPECTED[k];
+ if(!machines[k].length||machines[k].length===expected)return;
+ var block=machineLines[k]||[], all=[];
+ block.forEach(function(row){
+   if(row.kind==="machine")return;
+   var ex=extractMeasurements(row.raw,null);
+   ex.values.forEach(function(v){all.push(v)});
+ });
+ // Only replace when the whole block can be deterministically recovered to the machine's exact count.
+ if(all.length===expected)machines[k]=all;
 });
 var fileDate=parseDateFile(fileName),finalDate=fileDate||bodyDate,dateOk=!!finalDate,dateStatus="OK";
 if(!finalDate){dateStatus="日付なし"}else if(fileDate&&bodyDate&&dateKey(fileDate)!==dateKey(bodyDate)){dateStatus="不一致";dateOk=false;warnings.push("ファイル名と本文の日付が一致しません")}else if(fileDate&&bodyDate){dateStatus="一致"}else if(fileDate){dateStatus="ファイル名"}else{dateStatus="本文"}
