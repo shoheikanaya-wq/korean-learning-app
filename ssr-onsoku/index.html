@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.34</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.35</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=334").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=335").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -111,7 +111,7 @@ async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)retu
 async function extractDocx(file){if(!/\.docx$/i.test(file.name))throw new Error("docxファイルを選択してください");var zip=await JSZip.loadAsync(await file.arrayBuffer());var doc=zip.file("word/document.xml");if(!doc)throw new Error("Word本文を取得できません");var xml=await doc.async("string"),paras=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];paras.forEach(function(p){var chunks=[],re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>|<w:br\b[^>]*\/>|<w:tab\b[^>]*\/>/g,m;while((m=re.exec(p))){if(m[1]!==undefined)chunks.push(decodeXml(m[1]));else if(/^<w:br\b/.test(m[0]))chunks.push("\n");else chunks.push(" ")}var t=chunks.join("").replace(/\u00a0/g," ");t.split(/\n+/).forEach(function(s){s=s.trim();if(s)lines.push(s)})});if(!lines.length)throw new Error("Word本文が空です");return lines}
 function decodeXml(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
 function parse(lines,fileName){
-var machines={};ORDER.forEach(function(k){machines[k]=[]});var corrections=[];
+var machines={};ORDER.forEach(function(k){machines[k]=[]});var corrections=[],machineLines={};ORDER.forEach(function(k){machineLines[k]=[]});
 var factories={1:null,2:null,3:null},bodyDate=null,currentMachine=null,warnings=[],formatErrors=[],issues=[];
 lines.forEach(function(raw,lineIndex){
  var line=raw.normalize("NFKC").trim();
@@ -119,9 +119,10 @@ lines.forEach(function(raw,lineIndex){
  var ft=parseFactory(raw);
  if(ft){if(ft.valid)factories[ft.index]=ft.value;else formatErrors.push("構内温度"+["","①","②","③"][ft.index]+"の数値形式を確認してください");currentMachine=null;return}
  var mac=detectMachine(line);
- if(mac){currentMachine=mac;var same=extractMeasurements(line,mac);same.values.forEach(function(v){machines[currentMachine].push(v)});if(same.invalid.length){formatErrors.push(mac+"："+same.invalid.join("、"));issues.push({machine:mac,lineIndex:lineIndex,raw:raw,tokens:same.invalid.slice()})}return}
+ if(mac){currentMachine=mac;machineLines[mac].push({lineIndex:lineIndex,raw:raw,kind:"machine"});var same=extractMeasurements(line,mac);same.values.forEach(function(v){machines[currentMachine].push(v)});if(same.invalid.length){formatErrors.push(mac+"："+same.invalid.join("、"));issues.push({machine:mac,lineIndex:lineIndex,raw:raw,tokens:same.invalid.slice()})}return}
  if(parseDateText(line)){currentMachine=null;return}
  if(!currentMachine)return;
+ machineLines[currentMachine].push({lineIndex:lineIndex,raw:raw,kind:"data"});
  var ex=extractMeasurements(line,null);
  if(ex.corrections&&ex.corrections.length)ex.corrections.forEach(function(x){corrections.push({machine:currentMachine,lineIndex:lineIndex,raw:raw,original:x.original,values:x.values,suspicious:x.suspicious})});
  ex.values.forEach(function(v){machines[currentMachine].push(v)});
@@ -137,15 +138,15 @@ ORDER.forEach(function(k){
  else if(rawVals.length>expected){status=(rawVals.length-expected)+"個超過";hasDataError=true}
  else status="OK";
  var vals=rawVals.slice(0,expected);
- results[k]={values:vals,rawValues:rawVals,count:rawVals.length,expected:expected,upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>2?vals.slice(2):[],status:status,complete:validCount}
+ results[k]={values:vals,rawValues:rawVals,count:rawVals.length,expected:expected,expectedSsr:Math.max(0,expected-2),upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>2?vals.slice(2):[],status:status,complete:validCount,structure:rawVals.length>=2?"盤内温度2個を先頭から確定 → 3個目以降をSSRとして判定":"盤内温度2個が揃っていません"}
 });
 var diagnostics=[];
 if(!finalDate)diagnostics.push({type:"日付",reason:"測定日を読み取れません",expected:"測定日 1件",actual:"0件"});
 else if(!dateOk)diagnostics.push({type:"日付",reason:"ファイル名とWord本文の日付が一致しません",expected:"同じ測定日",actual:(fileDate?jpDate(fileDate):"なし")+" / "+(bodyDate?jpDate(bodyDate):"なし")});
 [1,2,3].forEach(function(i){if(factories[i]===null&&formatErrors.some(function(x){return x.indexOf("構内温度"+["","①","②","③"][i])===0}))diagnostics.push({type:"構内温度"+["","①","②","③"][i],reason:"温度の数値形式を読み取れません",expected:"○.○ / ○○.○ / ○○○.○",actual:"要確認"})});
-ORDER.forEach(function(k){var r=results[k];if(!r.count)return;if(r.count!==r.expected){var expectedSsr=Math.max(0,r.expected-2),actualSsr=Math.max(0,r.count-2);diagnostics.push({type:k,reason:r.count<r.expected?"測定値が不足しています":"測定値が多すぎます",expected:"盤内温度 2個 + SSR "+expectedSsr+"個 = "+r.expected+"個",actual:"盤内温度候補 "+Math.min(2,r.count)+"個 + SSR候補 "+actualSsr+"個 = "+r.count+"個"})}});
-issues.forEach(function(x){diagnostics.push({type:x.machine,reason:"数値の並びを一意に確定できません",expected:"小数1桁の測定値",actual:x.tokens.join("、"),lineIndex:x.lineIndex})});
-return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,date:finalDate,dateStatus:dateStatus,dateOk:dateOk,canExport:dateOk&&!hasDataError,warnings:warnings,formatErrors:formatErrors,hasDataError:hasDataError,sourceLines:lines.slice(),issues:issues,diagnostics:diagnostics,corrections:corrections}
+ORDER.forEach(function(k){var r=results[k];if(!r.count)return;if(r.count!==r.expected){var expectedSsr=Math.max(0,r.expected-2),actualSsr=Math.max(0,r.count-2);diagnostics.push({type:k,reason:r.count<r.expected?"測定値が不足しています":"測定値が多すぎます",expected:"盤内温度 上・下の2個 + SSR "+expectedSsr+"個 = "+r.expected+"個",actual:(r.count>=2?"先頭2個を盤内温度として確定。SSR候補 "+actualSsr+"個":"盤内温度候補 "+r.count+"個しかありません")+"（合計 "+r.count+"個）"})}});
+issues.forEach(function(x){diagnostics.push({type:x.machine,reason:"機台構造で見ても数値を確定できません",expected:"先頭2個＝盤内温度 上・下、その後＝SSR（小数1桁）",actual:x.tokens.join("、"),lineIndex:x.lineIndex})});
+return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,date:finalDate,dateStatus:dateStatus,dateOk:dateOk,canExport:dateOk&&!hasDataError,warnings:warnings,formatErrors:formatErrors,hasDataError:hasDataError,sourceLines:lines.slice(),issues:issues,diagnostics:diagnostics,corrections:corrections,machineLines:machineLines}
 }
 function splitConcatenatedDecimal(tok){
  if(!/^\d+(?:\.\d)+$/.test(tok))return null;
