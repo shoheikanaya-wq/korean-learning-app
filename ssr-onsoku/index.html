@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.7</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.8</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=170").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=180").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -155,25 +155,39 @@ return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,
 }
 function splitConcatenatedDecimal(tok){
  if(!/^\d+(?:\.\d)+$/.test(tok))return null;
- var memo={};
+ var s=tok, memo={};
  function walk(pos){
-   if(pos===tok.length)return {vals:[],score:0};
+   if(pos===s.length)return {vals:[],score:0};
    if(memo[pos]!==undefined)return memo[pos];
    var best=null;
+   // A measurement is normally NN.N. Because spaces may disappear, search 2 or 3 integer digits
+   // and allow the next value to begin immediately after the decimal digit.
    for(var intLen=2;intLen<=3;intLen++){
      var dot=pos+intLen;
-     if(dot+1>=tok.length||tok[dot]!==".")continue;
-     var raw=tok.slice(pos,dot)+"."+tok[dot+1],v=Number(raw);
-     if(!isFinite(v))continue;
-     var rest=walk(dot+2); if(!rest)continue;
-     var score=rest.score+(v>=15&&v<=80?0:(v>=10&&v<=100?3:20))+(intLen===3?6:0);
-     var cand={vals:[v].concat(rest.vals),score:score};
-     if(!best||cand.score<best.score||(cand.score===best.score&&cand.vals.length>best.vals.length))best=cand;
+     if(dot+1>=s.length||s[dot]!==".")continue;
+     var v=Number(s.slice(pos,dot+2));
+     var rest=walk(dot+2);
+     if(!rest)continue;
+     var penalty=(v>=15&&v<=80?0:(v>=10&&v<=100?5:50))+(intLen===3?12:0);
+     var cand={vals:[v].concat(rest.vals),score:penalty+rest.score};
+     if(!best||cand.score<best.score)best=cand;
    }
-   memo[pos]=best; return best;
+   // Recovery: OCR/voice concatenation can leave extra digits before the next decimal,
+   // e.g. 42.1432.0 => 42.1 + 43.2 + ...
+   if(pos+3<s.length&&/^\d{2}\.\d/.test(s.slice(pos,pos+4))){
+     var v2=Number(s.slice(pos,pos+4));
+     var next=pos+4;
+     if(next<s.length&&s[next]!=="."){
+       var rest2=walk(next);
+       if(rest2){
+         var cand2={vals:[v2].concat(rest2.vals),score:rest2.score+(v2>=15&&v2<=80?1:50)};
+         if(!best||cand2.score<best.score)best=cand2;
+       }
+     }
+   }
+   memo[pos]=best;return best;
  }
- var r=walk(0);
- return r&&r.vals.length?r.vals:null
+ var r=walk(0);return r&&r.vals.length?r.vals:null
 }
 function tokenizeFlexible(line){
  var n=line.normalize("NFKC").replace(/[，、,;；\/|]+/g," ").replace(/[℃度]/g," ");
