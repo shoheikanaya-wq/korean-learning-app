@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.35</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.5</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=335").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=150").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -111,7 +111,7 @@ async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)retu
 async function extractDocx(file){if(!/\.docx$/i.test(file.name))throw new Error("docxファイルを選択してください");var zip=await JSZip.loadAsync(await file.arrayBuffer());var doc=zip.file("word/document.xml");if(!doc)throw new Error("Word本文を取得できません");var xml=await doc.async("string"),paras=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];paras.forEach(function(p){var chunks=[],re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>|<w:br\b[^>]*\/>|<w:tab\b[^>]*\/>/g,m;while((m=re.exec(p))){if(m[1]!==undefined)chunks.push(decodeXml(m[1]));else if(/^<w:br\b/.test(m[0]))chunks.push("\n");else chunks.push(" ")}var t=chunks.join("").replace(/\u00a0/g," ");t.split(/\n+/).forEach(function(s){s=s.trim();if(s)lines.push(s)})});if(!lines.length)throw new Error("Word本文が空です");return lines}
 function decodeXml(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
 function parse(lines,fileName){
-var machines={};ORDER.forEach(function(k){machines[k]=[]});var corrections=[],machineLines={};ORDER.forEach(function(k){machineLines[k]=[]});
+var machines={};ORDER.forEach(function(k){machines[k]=[]});var corrections=[],machineLines={},panelLineSeen={};ORDER.forEach(function(k){machineLines[k]=[];panelLineSeen[k]=false});
 var factories={1:null,2:null,3:null},bodyDate=null,currentMachine=null,warnings=[],formatErrors=[],issues=[];
 lines.forEach(function(raw,lineIndex){
  var line=raw.normalize("NFKC").trim();
@@ -119,12 +119,17 @@ lines.forEach(function(raw,lineIndex){
  var ft=parseFactory(raw);
  if(ft){if(ft.valid)factories[ft.index]=ft.value;else formatErrors.push("構内温度"+["","①","②","③"][ft.index]+"の数値形式を確認してください");currentMachine=null;return}
  var mac=detectMachine(line);
- if(mac){currentMachine=mac;machineLines[mac].push({lineIndex:lineIndex,raw:raw,kind:"machine"});var same=extractMeasurements(line,mac);same.values.forEach(function(v){machines[currentMachine].push(v)});if(same.invalid.length){formatErrors.push(mac+"："+same.invalid.join("、"));issues.push({machine:mac,lineIndex:lineIndex,raw:raw,tokens:same.invalid.slice()})}return}
+ if(mac){currentMachine=mac;panelLineSeen[mac]=false;machineLines[mac].push({lineIndex:lineIndex,raw:raw,kind:"machine"});var same=extractMeasurements(line,mac);same.values.forEach(function(v){machines[currentMachine].push(v)});if(same.invalid.length){formatErrors.push(mac+"："+same.invalid.join("、"));issues.push({machine:mac,lineIndex:lineIndex,raw:raw,tokens:same.invalid.slice()})}return}
  if(parseDateText(line)){currentMachine=null;return}
  if(!currentMachine)return;
- machineLines[currentMachine].push({lineIndex:lineIndex,raw:raw,kind:"data"});
+ machineLines[currentMachine].push({lineIndex:lineIndex,raw:raw,kind:panelLineSeen[currentMachine]?"ssr":"panel"});
  var ex=extractMeasurements(line,null);
- if(ex.corrections&&ex.corrections.length)ex.corrections.forEach(function(x){corrections.push({machine:currentMachine,lineIndex:lineIndex,raw:raw,original:x.original,values:x.values,suspicious:x.suspicious})});
+ var isPanelLine=!panelLineSeen[currentMachine];
+ if(isPanelLine&&ex.values.length>=2)panelLineSeen[currentMachine]=true;
+ if(ex.corrections&&ex.corrections.length)ex.corrections.forEach(function(x){
+   var normalPanel=isPanelLine&&ex.values.length===2&&x.values.length===2;
+   if(!normalPanel)corrections.push({machine:currentMachine,lineIndex:lineIndex,raw:raw,original:x.original,values:x.values,suspicious:x.suspicious})
+ });
  ex.values.forEach(function(v){machines[currentMachine].push(v)});
  if(ex.invalid.length){formatErrors.push(currentMachine+"："+ex.invalid.join("、"));issues.push({machine:currentMachine,lineIndex:lineIndex,raw:raw,tokens:ex.invalid.slice()})}
 });
