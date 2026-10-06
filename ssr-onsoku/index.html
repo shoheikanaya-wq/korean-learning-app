@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.6</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.7</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形</div>
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=160").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=170").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -155,16 +155,25 @@ return{machines:results,factories:factories,fileDate:fileDate,bodyDate:bodyDate,
 }
 function splitConcatenatedDecimal(tok){
  if(!/^\d+(?:\.\d)+$/.test(tok))return null;
- var parts=[],pos=0;
- while(pos<tok.length){
-   var dot=tok.indexOf(".",pos);
-   if(dot<0||dot===pos||dot+1>=tok.length)return null;
-   var integerPart=tok.slice(pos,dot);
-   if(!/^\d{1,3}$/.test(integerPart))return null;
-   parts.push(Number(integerPart+"."+tok[dot+1]));
-   pos=dot+2;
+ var memo={};
+ function walk(pos){
+   if(pos===tok.length)return {vals:[],score:0};
+   if(memo[pos]!==undefined)return memo[pos];
+   var best=null;
+   for(var intLen=2;intLen<=3;intLen++){
+     var dot=pos+intLen;
+     if(dot+1>=tok.length||tok[dot]!==".")continue;
+     var raw=tok.slice(pos,dot)+"."+tok[dot+1],v=Number(raw);
+     if(!isFinite(v))continue;
+     var rest=walk(dot+2); if(!rest)continue;
+     var score=rest.score+(v>=15&&v<=80?0:(v>=10&&v<=100?3:20))+(intLen===3?6:0);
+     var cand={vals:[v].concat(rest.vals),score:score};
+     if(!best||cand.score<best.score||(cand.score===best.score&&cand.vals.length>best.vals.length))best=cand;
+   }
+   memo[pos]=best; return best;
  }
- return parts.length?parts:null
+ var r=walk(0);
+ return r&&r.vals.length?r.vals:null
 }
 function tokenizeFlexible(line){
  var n=line.normalize("NFKC").replace(/[，、,;；\/|]+/g," ").replace(/[℃度]/g," ");
@@ -181,7 +190,7 @@ function extractMeasurements(line,machine){
  var n=line.normalize("NFKC");
  if(machine)n=n.replace(new RegExp(machine.replace("-","[-‐‑‒–—―−－]?"),"ig")," ");
  var flex=tokenizeFlexible(n);
- return{values:flex.values,invalid:flex.invalid}
+ return{values:flex.values,invalid:flex.invalid,corrections:flex.corrections||[]}
 }
 function extractTemps(line){return extractMeasurements(line,null).values}
 function detectMachine(line){var n=line.normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/[‐‑‒–—―−－]/g,"-");var a=["FM83-1","FM83-2","MM18","FM81","FM84","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];for(var i=0;i<a.length;i++)if(n.indexOf(a[i])>=0)return a[i];return null}
