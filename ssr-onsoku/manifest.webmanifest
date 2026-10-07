@@ -2,7 +2,7 @@
   "name": "SSR温測 Word→Excel",
   "short_name": "SSR温測",
   "description": "SSR温度測定Wordを確認し、Excel雛形へ出力（v3.30）",
-  "start_url": "./?v=330",
+  "start_url": "./?v=111",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eef3f7",
