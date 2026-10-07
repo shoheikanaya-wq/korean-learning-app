@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.5</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.6</span></p></div></header>
 
 
 
@@ -104,7 +104,8 @@ async function ssrStandaloneRead(file){
   var summary=order.map(function(k){return k+" "+found[k].length+"/"+expected[k];}).join("　");
   window.__ssrStandalone.found=found;
   var box=document.getElementById("summary");
-  if(box){box.hidden=false;box.textContent="独立解析："+summary;}
+  if(!box){box=document.createElement("div");box.id="standaloneSummary";box.style.cssText="margin:14px 0;padding:14px;background:#fff;border:2px solid #2f75b5;border-radius:12px;font-size:16px;line-height:1.7;white-space:normal";var anchor=document.getElementById("message");if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(box,anchor.nextSibling);}
+  box.hidden=false;box.innerHTML="<b>機台別 読取数 / 必要数</b><br>"+order.map(function(k){var ok=found[k].length===expected[k];return (ok?"✓ ":"⚠ ")+k+"　"+found[k].length+" / "+expected[k];}).join("<br>");
   m.textContent="Word読取OK："+lines.length+"行。機台別の測定値数を解析しました。";
  }catch(e){m.textContent="Word読取エラー："+(e&&e.message?e.message:String(e));}
 }
@@ -166,7 +167,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=350").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=360").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
