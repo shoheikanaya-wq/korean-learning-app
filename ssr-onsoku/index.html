@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.1</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.2</span></p></div></header>
 
 
 
@@ -70,6 +70,17 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+document.addEventListener("change",function(ev){
+  var el=ev.target;
+  if(!el||el.id!=="docxInput")return;
+  var f=el.files&&el.files[0];
+  var n=document.getElementById("fileName"),m=document.getElementById("message");
+  if(n)n.textContent=f?"Word："+f.name:"Word：未選択";
+  if(m)m.textContent=f?"Wordを選択しました。読み取りを開始します…":"Wordが選択されていません。";
+  if(f&&typeof window.readWord==="function"){Promise.resolve().then(function(){window.readWord({target:el});});}
+},true);
+</script>
+<script>
 "use strict";
 var ORDER=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];
 var EXPECTED={"MM18":46,"FM81":22,"FM84":30,"FM83-1":37,"FM83-2":14,"FM96":20,"FM97":20,"FM19":32,"FE04":24,"FE01":20,"FM07":34,"FM01":22,"FM22":32};
@@ -120,7 +131,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=310").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=320").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
