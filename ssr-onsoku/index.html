@@ -11,22 +11,20 @@
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <style>
 :root{font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;color:#17202a;background:#eef3f7;--blue:#1f4e78;--blue2:#2f75b5;--ok:#1f7a3f;--ng:#b42318;--warn:#9a6400}*{box-sizing:border-box}body{margin:0}.app{max-width:880px;margin:auto;padding:14px 12px 42px}.hero{display:flex;align-items:center;gap:12px;padding:8px 2px 14px}.mark{width:58px;height:58px;border-radius:17px;background:var(--blue);color:#fff;font-weight:900;display:grid;place-items:center;box-shadow:0 5px 16px #1f4e7833}.hero h1{margin:0;font-size:27px}.hero p{margin:3px 0 0;color:#5b6570;font-weight:650}.card{background:#fff;border:1px solid #dde6ed;border-radius:18px;padding:15px;margin-bottom:13px;box-shadow:0 3px 14px #17334d12}.section-title{font-size:19px;font-weight:900;margin-bottom:10px}.file-button,.action{display:block;width:100%;border:0;border-radius:16px;padding:17px 12px;text-align:center;font-size:21px;font-weight:900;cursor:pointer}.file-button{background:var(--blue2);color:#fff}.action{background:#edf3f8;color:#163c5d;border:1px solid #cbd9e5}.action.primary{background:#1f7a3f;color:white;border:0}.action:disabled{background:#adb8bf;color:#fff;cursor:not-allowed}.hidden-input{position:absolute;left:-9999px}.statusline{margin:10px 0 0;font-weight:800;overflow-wrap:anywhere}.small{font-size:13px;color:#69747e;line-height:1.5}.template-ok{color:var(--ok)}.template-ng{color:var(--ng)}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.summary-grid div{background:#f5f8fb;border-radius:12px;padding:9px}.summary-grid span{display:block;font-size:12px;color:#6b7680}.summary-grid strong{display:block;margin-top:2px}.factory{font-size:19px;font-weight:900;text-align:center;padding:13px 4px}.statusbox{border-radius:12px;padding:11px;text-align:center;font-weight:900}.ok{background:#e7f5eb;color:var(--ok)}.ng{background:#fdebea;color:var(--ng)}.warn{background:#fff4d6;color:var(--warn)}.viewtabs{display:flex;gap:8px;margin-bottom:12px}.viewtab{flex:1;border:1px solid #cbd9e5;border-radius:12px;padding:11px;background:#f3f6f9;color:#163c5d;font-weight:900;font-size:16px}.viewtab.active{background:var(--blue);color:#fff;border-color:var(--blue)}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:590px}.verticaltable{min-width:900px}.verticaltable th:first-child,.verticaltable td:first-child{position:sticky;left:0;background:#fff;z-index:1}.verticaltable thead th:first-child{background:#f3f6f9}th,td{padding:9px 7px;border-bottom:1px solid #e5e9ed;text-align:center;font-variant-numeric:tabular-nums}th{background:#f3f6f9;font-size:12px}th:first-child,td:first-child{text-align:left;font-weight:850}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:900}.pill.ok{background:#e7f5eb}.pill.ng{background:#fdebea}.pill.warn{background:#fff4d6}.reviewbox{margin-top:12px;border:2px solid #d92d20;background:#fff5f4;border-radius:14px;padding:12px}.reviewbox h3{margin:0 0 8px;color:#b42318}.reviewline{display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:center;margin:7px 0}.reviewline label{font-weight:900;color:#b42318}.reviewline input{width:100%;border:2px solid #d92d20;border-radius:10px;padding:10px;font-size:17px;font-variant-numeric:tabular-nums}.bad-data{text-decoration:underline;text-decoration-color:#d92d20;text-decoration-thickness:3px;text-underline-offset:3px}.diagnosis{grid-column:1/-1;background:#fff;border-left:5px solid #d92d20;border-radius:8px;padding:9px 11px;font-size:14px;line-height:1.55}.diagnosis b{color:#b42318}.diagnosis .oktxt{color:#067647;font-weight:800}.candidate{grid-column:1/-1;background:#fffaeb;border-left:5px solid #f79009;border-radius:8px;padding:10px 11px;font-size:14px;line-height:1.55}.candidate b{color:#b54708}.candidate input{width:100%;margin-top:7px;border:2px solid #f79009;border-radius:9px;padding:9px;font-size:16px}details summary{font-weight:850;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f8fa;padding:10px;border-radius:10px;max-height:300px;overflow:auto;font-size:12px}.message{text-align:center;padding:8px;font-weight:750;min-height:35px}.steps{margin:0;padding-left:20px;line-height:1.8;font-weight:650}footer{font-size:12px;color:#6c7680;line-height:1.55;padding:0 6px}@media(max-width:520px){.app{padding:10px 9px 32px}.hero h1{font-size:24px}.summary-grid{grid-template-columns:1fr}.file-button,.action{font-size:20px}}
-.install-card{border:2px solid #2f75b5;background:#f3f8fc}.install-note{margin:8px 0 0;font-size:13px;color:#5b6570;line-height:1.5}</style>
+</style>
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.6</span></p></div></header>
-
-
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.10</span></p></div></header>
 
 <section class="card">
-<div class="section-title">Excel雛形（標準装備）</div>
-<div id="templateStatus" class="statusline template-ok">標準雛形：SSR温測テンプレ.xlsx（内蔵）</div>
-<details style="margin-top:10px"><summary>将来、対象SSRが増えたときだけ雛形を更新</summary>
-<label class="action" for="templateInput" style="margin-top:10px">新しいExcel雛形に更新</label>
+<div class="section-title">Excel雛形</div>
+<div id="templateStatus" class="statusline template-ok">標準雛形：読み込み中…</div>
+<details style="margin-top:10px"><summary>必要なときだけ雛形を交換</summary>
+<label class="action" for="templateInput" style="margin-top:10px">別のExcel雛形を登録</label>
 <input id="templateInput" class="hidden-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 </details>
-<p class="small">現在使用するExcel雛形はアプリに標準装備しています。通常は雛形を選ぶ必要はありません。Word読込み後、アプリ内で「横データ」「縦データ」を切り替えて確認できます。Excel保存は1回だけで、最初から2シートを持つ標準雛形の「リレー配置と測定温度記入シート」と「縦データ」の両方へ値を書き込みます。</p>
+<p class="small">標準雛形はアプリに内蔵済みです。Word読込み後、アプリ内で「横データ」「縦データ」を切り替えて確認できます。Excel保存は1回だけで、最初から2シートを持つ標準雛形の「リレー配置と測定温度記入シート」と「縦データ」の両方へ値を書き込みます。</p>
 </section>
 
 <section class="card">
@@ -61,61 +59,12 @@
 <section class="card" style="text-align:center">
 <div style="font-weight:900;font-size:clamp(12px,3.4vw,17px);margin-bottom:9px;white-space:nowrap">このQRからSSRアプリをインストールできます。</div>
 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADpUlEQVR4nO2cX46bMBCHv19ByiNIe4A9irlBz7RH2hvAUXID/LgSaPpgG0zaqlK7UcJ25iEhJp+wpdH8tZHxdzJ9+0sQnHTSSSeddNJJJ5+PVJYWDVHSwComteQxyDckScODZ+vkc5Ft+gojQHwBuqW1qZ9NYe4FrIL4sgDNAoAeN1snn5HMOkTsIbxDVp9ruxixWRRGYOobjAjaFOls63TyfmR781vhKqD7kE3fP2TEl0Wf/EwnvxZ5q0M2vS6tEV9MdCC6BWAV4f2znunk1yKLDnUGRCDMmAARxjXdsxQPRagLkudap5N3JydJUg8aYgthbgzixQjXLS9jTWnZ42fr5FORyQ5V9mXqm3RhU49sel1I4dHRCp1tnU7ej8TMzAgz2AiYlSuCmRFsSWOEuTEbuyXdsPFc63TyfmTSoaRIJAUpSkNX7oydJfVJH+Y65GQlW162toT3tvJXv2roK1wvZfxc63TyfmSxQ8lRmSU3lm7MYGYL5AQfbKQxt0NOHqXyZWEG6MxK7GOWvRolRgI8HnLyRkrEU4KdEVJQVCKjprJNWcNch5yspfJlNjd2qzlhbrJZ2vM392VOHqToRlYfoNk8WGM20hwSfPPc3slb2bP3emwul8Gyk8uag9shJ39NhmtbRUHSaykXQWMQW+xNLdAtaHj0bJ18KnKvD8kmlf1DsOYmyKRmIdjaKtgqI27Audbp5N3JqW+K4YlSjqljtk0aAHvrAbbU7ZzrdPIOJKXNUepDuUtmRoqpu6W08UtQ5DG1k0c5lBeX0lpN5ei6SJQ1Z++hnWudTt6PPOT2MwdLU+Vq2Q7tRW3XISc3yb5s64Nl11asT5ZSY9wI1yEnj2TyW8QWDawq6rOKZIJYVTY4goYHz9bJ5ySjpKFbsDddUkFIKrlaSsSm/rOf6eTXIA89V7JFytl7lZJZ7npUxLnW6eT9yGO/zErjdeu05g0gOcsvuZrrkJOV7H37PJCUBm7G0oX37Z38LVkS9z0yYnrdDM8Me91Rw8Nn6+Tzkft7P1LjdepL+jX1jeV2a2qVrX6+zMmj/PzeDyAdT0z79K+CYKtyN61bWvvXZzr5tci617G1Odg2ou1Hy/Lf/XyZk38iUygU7COVF6UebOw+lHc0+tkgJ/9IhqvEpItJ/apcmI6XEkmD7/1w8kayLysJfrXZY9tjnYqPY/q/ny9z8lb2XirQVLtAclEx/Ty08T0ecrIW+TvOnXTSSSeddNLJ/5z8AXaPG7lsPsdUAAAAAElFTkSuQmCC" alt="SSR温測アプリ用QRコード" width="190" height="190" style="max-width:62vw;background:#fff;padding:8px;border:1px solid #d9e2e9;border-radius:14px">
-<button id="installButton" class="action primary" type="button" style="margin-top:12px">SSR温測をインストール</button>
-<p id="installNote" class="install-note">未インストールの端末では、ここからインストールできます。</p>
 
 </section>
 
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script>
-async function ssrStandaloneRead(file){
- var m=document.getElementById("message");
- try{
-  if(typeof JSZip==="undefined")throw new Error("Word解析ライブラリ未読込");
-  m.textContent="Word本文を展開中…";
-  var zip=await JSZip.loadAsync(await file.arrayBuffer());
-  var doc=zip.file("word/document.xml");
-  if(!doc)throw new Error("Word本文が見つかりません");
-  var xml=await doc.async("string");
-  var ps=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];
-  ps.forEach(function(p){
-   var out="",re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>|<w:br\b[^>]*\/>|<w:tab\b[^>]*\/>/g,x;
-   while((x=re.exec(p))){out+=x[1]!==undefined?x[1]:" ";}
-   out=out.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&").trim();
-   if(out)lines.push(out);
-  });
-  if(!lines.length)throw new Error("Word本文が空です");
-  window.__ssrStandalone={file:file,lines:lines};
-  var order=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];
-  var expected={"MM18":46,"FM81":22,"FM84":30,"FM83-1":37,"FM83-2":14,"FM96":20,"FM97":20,"FM19":32,"FE04":24,"FE01":20,"FM07":34,"FM01":22,"FM22":32};
-  var found={},current=null;
-  order.forEach(function(k){found[k]=[];});
-  lines.forEach(function(line){
-    var compact=line.toUpperCase().replace(/\s+/g,"");
-    var hit=null;
-    order.forEach(function(k){if(!hit&&compact.indexOf(k)>=0)hit=k;});
-    if(hit){current=hit;return;}
-    if(!current)return;
-    var vals=(line.match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter(function(v){return Number.isFinite(v)&&v>=0&&v<200;});
-    vals.forEach(function(v){found[current].push(v);});
-  });
-  var summary=order.map(function(k){return k+" "+found[k].length+"/"+expected[k];}).join("　");
-  window.__ssrStandalone.found=found;
-  var box=document.getElementById("summary");
-  if(!box){box=document.createElement("div");box.id="standaloneSummary";box.style.cssText="margin:14px 0;padding:14px;background:#fff;border:2px solid #2f75b5;border-radius:12px;font-size:16px;line-height:1.7;white-space:normal";var anchor=document.getElementById("message");if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(box,anchor.nextSibling);}
-  box.hidden=false;box.innerHTML="<b>機台別 読取数 / 必要数</b><br>"+order.map(function(k){var ok=found[k].length===expected[k];return (ok?"✓ ":"⚠ ")+k+"　"+found[k].length+" / "+expected[k];}).join("<br>");
-  m.textContent="Word読取OK："+lines.length+"行。機台別の測定値数を解析しました。";
- }catch(e){m.textContent="Word読取エラー："+(e&&e.message?e.message:String(e));}
-}
-document.addEventListener("change",function(ev){
- var el=ev.target;if(!el||el.id!=="docxInput")return;
- var f=el.files&&el.files[0],n=document.getElementById("fileName"),m=document.getElementById("message");
- if(n)n.textContent=f?"Word："+f.name:"Word：未選択";
- if(f){m.textContent="Wordを選択しました。読み取りを開始します…";ssrStandaloneRead(f);}
-},true);
-</script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 "use strict";
 var ORDER=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];
@@ -140,43 +89,25 @@ var MAP={
 var HEADERS={
 "MM18":["C2","E2","G2"],"FE01":["C12","E12","G12"],"FE04":["C18","E18","G18"],"FM81":["C24","E24","G24"],"FM83-1":["C32","E32","G32"],"FM83-2":["C38","E38","G38"],"FM84":["C45","E45","G45"],"FM96":["C54","E54","G54"],"FM97":["L54","N54","P54"],"FM19":["C63","E63","G63"],"FM22":["L63","N63","P63"],"FM01":["C76","E76","G76"],"FM07":["L76","N76","P76"]
 };
-var current=null,templateReady=true;
+var current=null,templateReady=false;
 function $(id){return document.getElementById(id)}
 document.addEventListener("DOMContentLoaded",function(){
  checkTemplate();
  $("templateInput").addEventListener("change",registerTemplate);
  $("docxInput").addEventListener("change",readWord);
-
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- var deferredInstallPrompt=null;
-var installBtn=$("installButton"),installNote=$("installNote");
-function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true}
-function refreshInstallUI(){
- if(isStandalone()){installBtn.disabled=false;installNote.textContent="インストール済みです。";return}
- 
- if(deferredInstallPrompt){installBtn.disabled=false;installNote.textContent="タップするとインストール確認が表示されます。"}
- else{installBtn.disabled=false;installNote.textContent="インストール画面が出ない場合は、Chromeのメニューから「ホーム画面に追加」または「アプリをインストール」を選んでください。"}
-}
-window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferredInstallPrompt=e;refreshInstallUI()});
-window.addEventListener("appinstalled",function(){deferredInstallPrompt=null;installNote.textContent="インストール済みです。";});
-installBtn.addEventListener("click",async function(){
- if(deferredInstallPrompt){deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice}catch(e){}deferredInstallPrompt=null;refreshInstallUI();return}
- installNote.textContent="このブラウザでは自動表示できません。Chrome右上の︙ →「ホーム画面に追加」または「アプリをインストール」を選んでください。";
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=1100").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
-refreshInstallUI();
-
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=360").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
-});
-function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
+function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
 async function loadCustomTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
-async function loadBuiltInTemplate(){var r=await fetch("./template/standard-v200.txt",{cache:"no-store"});if(!r.ok)throw new Error("標準雛形を取得できません");var bin=atob((await r.text()).replace(/\s/g,"")),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);return{buf:u8.buffer,name:"SSR温測テンプレ（標準）",builtIn:true}}
-async function loadTemplate(){var custom=null;try{custom=await loadCustomTemplate()}catch(e){}return custom&&custom.schemaVersion===330?custom:await loadBuiltInTemplate()}
-async function checkTemplate(){templateReady=true;$("templateStatus").textContent="標準雛形：SSR温測テンプレ.xlsx（内蔵）";$("templateStatus").className="statusline template-ok";updateExportState();try{await loadBuiltInTemplate()}catch(e){templateReady=false;$("templateStatus").textContent="標準雛形：読み込み失敗";$("templateStatus").className="statusline template-ng";show("標準雛形を読み込めません："+(e.message||e),true)}}
+async function loadBuiltInTemplate(){var r=await fetch("./template/approved-v330.txt",{cache:"no-store"});if(!r.ok)throw new Error("標準雛形を取得できません");var bin=atob((await r.text()).replace(/\s/g,"")),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);return{buf:u8.buffer,name:"標準雛形（v3.30）",builtIn:true}}
+async function loadTemplate(){var custom=await loadCustomTemplate().catch(function(){return null});return custom&&custom.schemaVersion===330?custom:await loadBuiltInTemplate()}
+async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent="雛形："+t.name;$("templateStatus").className="statusline template-ok";updateExportState()}catch(e){templateReady=false;show("標準雛形を読み込めません："+(e.message||e),true)}}
 async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
-async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f){$("fileName").textContent="Word：選択を確認できません";show("Wordファイルをもう一度選択してください。",true);return}$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{if(typeof JSZip==="undefined")throw new Error("Word解析機能を読み込めません。通信を確認してアプリを開き直してください");var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを保存できます。":"標準雛形を読み込み中です。"):"日付だけ確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
+async function readWord(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;$("fileName").textContent="Word："+f.name;show("Wordを読み取り中…");$("exportButton").disabled=true;try{var lines=await extractDocx(f);var parsed=parse(lines,f.name);current={file:f,lines:lines,parsed:parsed};render(parsed,lines);updateExportState();show(parsed.canExport?(templateReady?"確認OK。Excelを保存できます。":"標準雛形を読み込み中です。"):"日付だけ確認してください。",!parsed.canExport)}catch(e){current=null;show("Wordの読み取りに失敗しました："+(e.message||e),true)}}
 async function extractDocx(file){if(!/\.docx$/i.test(file.name))throw new Error("docxファイルを選択してください");var zip=await JSZip.loadAsync(await file.arrayBuffer());var doc=zip.file("word/document.xml");if(!doc)throw new Error("Word本文を取得できません");var xml=await doc.async("string"),paras=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];paras.forEach(function(p){var chunks=[],re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>|<w:br\b[^>]*\/>|<w:tab\b[^>]*\/>/g,m;while((m=re.exec(p))){if(m[1]!==undefined)chunks.push(decodeXml(m[1]));else if(/^<w:br\b/.test(m[0]))chunks.push("\n");else chunks.push(" ")}var t=chunks.join("").replace(/\u00a0/g," ");t.split(/\n+/).forEach(function(s){s=s.trim();if(s)lines.push(s)})});if(!lines.length)throw new Error("Word本文が空です");return lines}
 function decodeXml(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
 function parse(lines,fileName){
@@ -225,7 +156,7 @@ ORDER.forEach(function(k){
  else if(rawVals.length>expected){status=(rawVals.length-expected)+"個超過";hasDataError=true}
  else status="OK";
  var vals=rawVals.slice(0,expected);
- results[k]={values:vals,rawValues:rawVals,count:rawVals.length,expected:expected,expectedSsr:Math.max(0,expected-2),upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>2?vals.slice(2):[],status:status,complete:validCount,structure:rawVals.length>=2?(k==="MM18"?"MM18：最初の2個＝盤内温度。次の行の2個を含め、3個目以降はすべてSSR":"盤内温度2個を先頭から確定 → 3個目以降をSSRとして判定"):"盤内温度2個が揃っていません"}
+ results[k]={values:vals,rawValues:rawVals,count:rawVals.length,expected:expected,expectedSsr:Math.max(0,expected-2),upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>2?vals.slice(2):[],status:status,complete:validCount,structure:rawVals.length>=2?"盤内温度2個を先頭から確定 → 3個目以降をSSRとして判定":"盤内温度2個が揃っていません"}
 });
 var diagnostics=[];
 if(!finalDate)diagnostics.push({type:"日付",reason:"測定日を読み取れません",expected:"測定日 1件",actual:"0件"});
@@ -321,73 +252,30 @@ function temp(v){return Number.isFinite(v)?v.toFixed(1)+"℃":"--"}
 function num(v){return Number.isFinite(v)?v.toFixed(1):"-"}
 function factoryText(f){var a=[];[1,2,3].forEach(function(i){if(Number.isFinite(f[i]))a.push(["①","②","③"][i-1]+f[i].toFixed(1)+"℃")});return a.join("　")}
 function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent=factoryText(p.factories)||"構内温度：未入力（すべてスルー）";$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":"warn",countText=r.count===0?"0/"+r.expected:r.count+"/"+r.expected;tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+countText+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});renderVertical(p);renderReview(p);switchDataView("horizontal");var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"出力可能：データ形式・個数とも正常です":(p.dateOk&&p.hasDataError?"元データを確認してください（日付・数値形式・測定値数）":"日付を確認してください")}
-function rowCapacitySummary(machine,p){
- var map=MAP[machine],ml=(p.machineLines&&p.machineLines[machine])||[];
- if(!map)return"";
- var groups={},order=[];
- (map.ssr||[]).forEach(function(cell){var m=cell.match(/\\d+$/),row=m?m[0]:"?";if(!groups[row]){groups[row]=0;order.push(row)}groups[row]++});
- var r=p.machines[machine],actualSsr=Math.max(0,r.count-2),remaining=actualSsr,parts=[];\n if(machine==="MM18")parts.push("<b>MM18判定：</b>最初の2個だけ盤内温度。次の行の2個からSSRとして扱います。");
- order.forEach(function(row,idx){var need=groups[row],got=Math.min(need,Math.max(0,remaining)),diff=got-need;remaining-=got;parts.push("SSR "+(idx+1)+"行目：必要 "+need+"個 / 読取 "+got+"個"+(diff<0?" → "+(-diff)+"個不足":diff>0?" → "+diff+"個超過":" → OK"))});
- if(remaining>0)parts.push("SSR 余分："+remaining+"個");
- var panelGot=Math.min(2,r.count);
- return "<div style='margin-top:7px;padding:8px 10px;background:#f7f8fa;border-radius:8px'><b>雛形の個数内訳</b><br>盤内温度：必要 2個 / 読取 "+panelGot+"個"+(panelGot<2?" → "+(2-panelGot)+"個不足":" → OK")+"<br>"+parts.join("<br>")+"</div>"
-}
 function renderReview(p){
  var card=$("reviewCard"),rows=$("reviewRows");rows.innerHTML="";
  if((!p.issues||!p.issues.length)&&(!p.diagnostics||!p.diagnostics.length)&&(!p.corrections||!p.corrections.length)){card.hidden=true;return}
  card.hidden=false;
- var editableMachines={};
  (p.diagnostics||[]).forEach(function(d){
    var div=document.createElement("div");div.className="diagnosis";
-   div.innerHTML="<b>"+d.type+"："+d.reason+"</b><br>正常なら："+d.expected+"<br>今回："+d.actual+(MAP[d.type]?rowCapacitySummary(d.type,p):"");
-   if(MAP[d.type]&&!editableMachines[d.type]){
-     editableMachines[d.type]=true;
-     var block=(p.machineLines&&p.machineLines[d.type])||[];
-     var edit=document.createElement("div");edit.style.marginTop="9px";
-     edit.innerHTML="<b>間違ったデータを直接修正</b><div class='small'>Wordから読み取った行をそのまま枠内に表示しています。間違っている数値を直して「修正結果を確認」を押してください。</div>";
-     block.filter(function(x){return x.kind!=="machine"}).forEach(function(x,j){
-       var wrap=document.createElement("div");wrap.style.marginTop="7px";
-       var lab=document.createElement("div");lab.className="small";lab.textContent=(x.kind==="panel"?"盤内温度":"SSR")+" "+(j+1)+"行目";
-       var inp=document.createElement("input");
-       inp.setAttribute("data-review-block","1");inp.setAttribute("data-line",x.lineIndex);
-       inp.setAttribute("aria-label",d.type+" "+(j+1)+"行目 修正");
-       inp.value=x.raw;inp.style.cssText="width:100%;border:2px solid #d92d20;border-radius:9px;padding:10px;font-size:17px;font-variant-numeric:tabular-nums";
-       wrap.appendChild(lab);wrap.appendChild(inp);edit.appendChild(wrap)
-     });
-     div.appendChild(edit)
-   }
-   rows.appendChild(div)
- });
- // If a machine only has a token/candidate error, still provide the same full-line editor.
- var needEditors={};
- (p.issues||[]).forEach(function(x){if(MAP[x.machine])needEditors[x.machine]=true});
- (p.corrections||[]).forEach(function(x){if(MAP[x.machine])needEditors[x.machine]=true});
- Object.keys(needEditors).forEach(function(machine){
-   if(editableMachines[machine])return;
-   editableMachines[machine]=true;
-   var div=document.createElement("div");div.className="diagnosis";
-   div.innerHTML="<b>"+machine+"：手入力修正</b><br><span class='small'>Wordから読み取った各行を枠内に表示しています。間違っている箇所を直接直してください。</span>";
-   ((p.machineLines&&p.machineLines[machine])||[]).filter(function(x){return x.kind!=="machine"}).forEach(function(x,j){
-     var inp=document.createElement("input");inp.setAttribute("data-review-block","1");inp.setAttribute("data-line",x.lineIndex);inp.value=x.raw;
-     inp.style.cssText="width:100%;margin-top:7px;border:2px solid #d92d20;border-radius:9px;padding:10px;font-size:17px;font-variant-numeric:tabular-nums";div.appendChild(inp)
-   });
+   div.innerHTML="<b>"+d.type+"："+d.reason+"</b><br>正常なら："+d.expected+"<br>今回："+d.actual;
    rows.appendChild(div)
  });
  (p.corrections||[]).forEach(function(x,i){
    var div=document.createElement("div");div.className="candidate";
    var vals=x.values.map(function(v){return v.toFixed(1)}).join(" / ");
-   div.innerHTML="<b>"+x.machine+"　自動読取"+(x.suspicious?"・要確認":"")+"</b><br>元データ："+x.original+"<br>読取候補："+vals+(x.suspicious?"<br>⚠ 周囲と大きく違う可能性のある値を含みます。必要なら下欄を手入力で修正してください。":"<br>連続入力を小数1桁の測定値として分割しました。")+"</b><input data-candidate='"+i+"' data-line='"+x.lineIndex+"' value='"+x.raw.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")+"'>";
+   div.innerHTML="<b>"+x.machine+"　自動読取"+(x.suspicious?"・要確認":"")+"</b><br>元データ："+x.original+"<br>読取候補："+vals+(x.suspicious?"<br>⚠ 周囲と大きく違う可能性のある値を含みます。必要なら下欄を手入力で修正してください。":"<br>連続入力を小数1桁の測定値として分割しました。")+"<input data-candidate='"+i+"' data-line='"+x.lineIndex+"' value='"+x.raw.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")+"'>";
    rows.appendChild(div)
  });
  (p.issues||[]).forEach(function(issue,i){
    var div=document.createElement("div");div.className="reviewline";
-   var inp=document.createElement("input");inp.setAttribute("data-review",String(i));inp.setAttribute("data-line",String(issue.lineIndex));inp.value=issue.raw;inp.setAttribute("aria-label",issue.machine+" 修正値");
-   var lab=document.createElement("label");lab.textContent=issue.machine;div.appendChild(lab);div.appendChild(inp);rows.appendChild(div);
- });
+   div.innerHTML="<label>"+issue.machine+"</label><input data-review='"+i+"' data-line='"+issue.lineIndex+"' value='"+issue.raw.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")+"' aria-label='"+issue.machine+" 修正値'>";
+   rows.appendChild(div)
+ })
 }
 function recheckCorrections(){
  if(!current)return;
- var inputs=Array.from(document.querySelectorAll("[data-review],[data-candidate],[data-review-block]"));
+ var inputs=Array.from(document.querySelectorAll("[data-review],[data-candidate]"));
  if(!inputs.length)return;
  var lines=current.lines.slice();
  inputs.forEach(function(x){var idx=Number(x.dataset.line);if(Number.isInteger(idx)&&idx>=0&&idx<lines.length)lines[idx]=x.value.trim()});
@@ -462,9 +350,9 @@ function colIndex(address){var m=String(address).match(/[A-Z]+/i),n=0,s=m?m[0].t
 function insertCellInOrder(inner,newCell,address,p){var target=colIndex(address),re=new RegExp("<"+escRe(p)+"c\\b[^>]*(?:\\/>|>[\\s\\S]*?<\\/"+escRe(p)+"c>)","g"),m;while((m=re.exec(inner))){var rm=m[0].match(/\br="([^"]+)"/);if(rm&&colIndex(rm[1])>target)return inner.slice(0,m.index)+newCell+inner.slice(m.index)}return inner+newCell}
 function insertRowInOrder(xml,newRow,row,p){var open="<"+p+"sheetData>",close="</"+p+"sheetData>",a=xml.indexOf(open),b=xml.indexOf(close);if(a<0||b<0)throw new Error("Excelシート構造が不正です");var bodyStart=a+open.length,body=xml.slice(bodyStart,b),re=new RegExp("<"+escRe(p)+"row\\b[^>]*\\br=\"(\\d+)\"[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"row>","g"),m;while((m=re.exec(body))){if(+m[1]>row)return xml.slice(0,bodyStart+m.index)+newRow+xml.slice(bodyStart+m.index)}return xml.slice(0,b)+newRow+xml.slice(b)}
 function setCell(xml,address,value,type){var p=prefix(xml,"worksheet"),row=+(address.match(/\d+/)||["0"])[0],rowRe=new RegExp("<"+escRe(p)+"row\\b([^>]*)\\br=\\\""+row+"\\\"([^>]*)>([\\s\\S]*?)<\\/"+escRe(p)+"row>"),rm=xml.match(rowRe);if(rm){var inner=rm[3],selfRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\\\""+escRe(address)+"\\\")[^>]*\\/>"),normRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\\\""+escRe(address)+"\\\")[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"c>"),old=inner.match(selfRe)||inner.match(normRe),style=null;if(old){var sm=old[0].match(/\bs="([^"]+)"/);style=sm?sm[1]:null;inner=(value!==null&&value!==undefined&&value!=="")?inner.replace(old[0],cell(address,value,type,style,p)):inner.replace(old[0],emptyCellKeepingStyle(old[0],p))}else if(value!==null&&value!==undefined&&value!==""){inner=insertCellInOrder(inner,cell(address,value,type,null,p),address,p)}var replacement=rm[0].replace(rm[3],inner);return xml.replace(rowRe,replacement)}if(value===null||value===undefined||value==="")return xml;var newRow="<"+p+"row r=\""+row+"\">"+cell(address,value,type,null,p)+"</"+p+"row>";return insertRowInOrder(xml,newRow,row,p)}
-function emptyCellKeepingStyle(old,p){var m=old.match(new RegExp("^<"+escRe(p)+"c\\b([^>]*)"));if(!m)return old;var attrs=m[1].replace(/\\s+t="[^"]*"/g,"");return "<"+p+"c"+attrs+"/>";}
+function emptyCellKeepingStyle(old,p){var m=old.match(new RegExp("^<"+escRe(p)+"c\\b([^>]*)"));if(!m)return old;var attrs=m[1].replace(/\s+t="[^"]*"/g,"").replace(/\/\s*$/,"");return"<"+p+"c"+attrs+"/>"} 
 function cell(address,value,type,style,p){var s=style?" s=\""+style+"\"":"";if(type==="number")return"<"+p+"c r=\""+address+"\""+s+"><"+p+"v>"+Number(value)+"</"+p+"v></"+p+"c>";return"<"+p+"c r=\""+address+"\""+s+" t=\"inlineStr\"><"+p+"is><"+p+"t xml:space=\"preserve\">"+escXml(String(value))+"</"+p+"t></"+p+"is></"+p+"c>"}
-function escXml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function escXml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
 function escRe(s){return s.replace(/[.*+?^$(){}|[\]\\]/g,"\\$&")}
 function forceCalc(xml){var p=prefix(xml,"workbook"),re=new RegExp("<"+escRe(p)+"calcPr\\b[^>]*\\/>"),c="<"+p+"calcPr calcMode=\"auto\" fullCalcOnLoad=\"1\" forceFullCalc=\"1\"/>";return re.test(xml)?xml.replace(re,c):xml.replace("</"+p+"workbook>",c+"</"+p+"workbook>")}
 async function saveExcelFile(file){
