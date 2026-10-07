@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.4</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.5</span></p></div></header>
 
 
 
@@ -88,7 +88,24 @@ async function ssrStandaloneRead(file){
   });
   if(!lines.length)throw new Error("Word本文が空です");
   window.__ssrStandalone={file:file,lines:lines};
-  m.textContent="Word読取OK："+lines.length+"行。次に測定値解析へ進みます。";
+  var order=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];
+  var expected={"MM18":46,"FM81":22,"FM84":30,"FM83-1":37,"FM83-2":14,"FM96":20,"FM97":20,"FM19":32,"FE04":24,"FE01":20,"FM07":34,"FM01":22,"FM22":32};
+  var found={},current=null;
+  order.forEach(function(k){found[k]=[];});
+  lines.forEach(function(line){
+    var compact=line.toUpperCase().replace(/\s+/g,"");
+    var hit=null;
+    order.forEach(function(k){if(!hit&&compact.indexOf(k)>=0)hit=k;});
+    if(hit){current=hit;return;}
+    if(!current)return;
+    var vals=(line.match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter(function(v){return Number.isFinite(v)&&v>=0&&v<200;});
+    vals.forEach(function(v){found[current].push(v);});
+  });
+  var summary=order.map(function(k){return k+" "+found[k].length+"/"+expected[k];}).join("　");
+  window.__ssrStandalone.found=found;
+  var box=document.getElementById("summary");
+  if(box){box.hidden=false;box.textContent="独立解析："+summary;}
+  m.textContent="Word読取OK："+lines.length+"行。機台別の測定値数を解析しました。";
  }catch(e){m.textContent="Word読取エラー："+(e&&e.message?e.message:String(e));}
 }
 document.addEventListener("change",function(ev){
@@ -149,7 +166,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=340").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=350").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
