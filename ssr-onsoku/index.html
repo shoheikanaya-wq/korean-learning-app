@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.3</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.4</span></p></div></header>
 
 
 
@@ -70,14 +70,32 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+async function ssrStandaloneRead(file){
+ var m=document.getElementById("message");
+ try{
+  if(typeof JSZip==="undefined")throw new Error("Word解析ライブラリ未読込");
+  m.textContent="Word本文を展開中…";
+  var zip=await JSZip.loadAsync(await file.arrayBuffer());
+  var doc=zip.file("word/document.xml");
+  if(!doc)throw new Error("Word本文が見つかりません");
+  var xml=await doc.async("string");
+  var ps=xml.match(/<w:p\b[\s\S]*?<\/w:p>/g)||[],lines=[];
+  ps.forEach(function(p){
+   var out="",re=/<w:t\b[^>]*>([\s\S]*?)<\/w:t>|<w:br\b[^>]*\/>|<w:tab\b[^>]*\/>/g,x;
+   while((x=re.exec(p))){out+=x[1]!==undefined?x[1]:" ";}
+   out=out.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&").trim();
+   if(out)lines.push(out);
+  });
+  if(!lines.length)throw new Error("Word本文が空です");
+  window.__ssrStandalone={file:file,lines:lines};
+  m.textContent="Word読取OK："+lines.length+"行。次に測定値解析へ進みます。";
+ }catch(e){m.textContent="Word読取エラー："+(e&&e.message?e.message:String(e));}
+}
 document.addEventListener("change",function(ev){
-  var el=ev.target;
-  if(!el||el.id!=="docxInput")return;
-  var f=el.files&&el.files[0];
-  var n=document.getElementById("fileName"),m=document.getElementById("message");
-  if(n)n.textContent=f?"Word："+f.name:"Word：未選択";
-  if(m)m.textContent=f?"Wordを選択しました。読み取りを開始します…":"Wordが選択されていません。";
-  if(f){if(typeof window.readWord==="function"){if(m)m.textContent="Word解析処理を起動しました…";Promise.resolve().then(function(){return window.readWord({target:el});}).catch(function(e){if(m)m.textContent="Word解析エラー："+(e&&e.message?e.message:String(e));});}else{if(m)m.textContent="Word解析処理が起動していません。本体JavaScriptを確認中です。";}}
+ var el=ev.target;if(!el||el.id!=="docxInput")return;
+ var f=el.files&&el.files[0],n=document.getElementById("fileName"),m=document.getElementById("message");
+ if(n)n.textContent=f?"Word："+f.name:"Word：未選択";
+ if(f){m.textContent="Wordを選択しました。読み取りを開始します…";ssrStandaloneRead(f);}
 },true);
 </script>
 <script>
@@ -131,7 +149,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=330").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=340").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
