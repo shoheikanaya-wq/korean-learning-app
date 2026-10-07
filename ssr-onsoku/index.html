@@ -179,7 +179,7 @@ ORDER.forEach(function(k){
  else if(rawVals.length>expected){status=(rawVals.length-expected)+"個超過";hasDataError=true}
  else status="OK";
  var vals=rawVals.slice(0,expected);
- results[k]={values:vals,rawValues:rawVals,count:rawVals.length,expected:expected,expectedSsr:Math.max(0,expected-2),upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>2?vals.slice(2):[],status:status,complete:validCount,structure:rawVals.length>=2?"盤内温度2個を先頭から確定 → 3個目以降をSSRとして判定":"盤内温度2個が揃っていません"}
+ results[k]={values:vals,rawValues:rawVals,count:rawVals.length,expected:expected,expectedSsr:Math.max(0,expected-2),upper:vals.length?vals[0]:null,lower:vals.length>1?vals[1]:null,ssr:vals.length>2?vals.slice(2):[],status:status,complete:validCount,structure:rawVals.length>=2?(k==="MM18"?"MM18：最初の2個＝盤内温度。次の行の2個を含め、3個目以降はすべてSSR":"盤内温度2個を先頭から確定 → 3個目以降をSSRとして判定"):"盤内温度2個が揃っていません"}
 });
 var diagnostics=[];
 if(!finalDate)diagnostics.push({type:"日付",reason:"測定日を読み取れません",expected:"測定日 1件",actual:"0件"});
@@ -280,7 +280,7 @@ function rowCapacitySummary(machine,p){
  if(!map)return"";
  var groups={},order=[];
  (map.ssr||[]).forEach(function(cell){var m=cell.match(/\\d+$/),row=m?m[0]:"?";if(!groups[row]){groups[row]=0;order.push(row)}groups[row]++});
- var r=p.machines[machine],actualSsr=Math.max(0,r.count-2),remaining=actualSsr,parts=[];
+ var r=p.machines[machine],actualSsr=Math.max(0,r.count-2),remaining=actualSsr,parts=[];\n if(machine==="MM18")parts.push("<b>MM18判定：</b>最初の2個だけ盤内温度。次の行の2個からSSRとして扱います。");
  order.forEach(function(row,idx){var need=groups[row],got=Math.min(need,Math.max(0,remaining)),diff=got-need;remaining-=got;parts.push("SSR "+(idx+1)+"行目：必要 "+need+"個 / 読取 "+got+"個"+(diff<0?" → "+(-diff)+"個不足":diff>0?" → "+diff+"個超過":" → OK"))});
  if(remaining>0)parts.push("SSR 余分："+remaining+"個");
  var panelGot=Math.min(2,r.count);
