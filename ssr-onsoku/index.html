@@ -275,13 +275,24 @@ function temp(v){return Number.isFinite(v)?v.toFixed(1)+"℃":"--"}
 function num(v){return Number.isFinite(v)?v.toFixed(1):"-"}
 function factoryText(f){var a=[];[1,2,3].forEach(function(i){if(Number.isFinite(f[i]))a.push(["①","②","③"][i-1]+f[i].toFixed(1)+"℃")});return a.join("　")}
 function render(p,lines){$("summaryCard").hidden=false;$("machineCard").hidden=false;$("detailsCard").hidden=false;$("dateResult").textContent=jpDate(p.date);$("dateStatus").textContent=p.dateStatus;$("factoryResult").textContent=factoryText(p.factories)||"構内温度：未入力（すべてスルー）";$("rawText").textContent=lines.join("\n");var tb=$("machineRows");tb.innerHTML="";ORDER.forEach(function(k){var r=p.machines[k],tr=document.createElement("tr"),cl=r.status==="OK"?"ok":"warn",countText=r.count===0?"0/"+r.expected:r.count+"/"+r.expected;tr.innerHTML="<td>"+k+"</td><td>"+num(r.upper)+"</td><td>"+num(r.lower)+"</td><td>"+countText+"</td><td><span class='pill "+cl+"'>"+r.status+"</span></td>";tb.appendChild(tr)});renderVertical(p);renderReview(p);switchDataView("horizontal");var box=$("globalStatus");box.className="statusbox "+(p.canExport?"ok":"ng");box.textContent=p.canExport?"出力可能：データ形式・個数とも正常です":(p.dateOk&&p.hasDataError?"元データを確認してください（日付・数値形式・測定値数）":"日付を確認してください")}
+function rowCapacitySummary(machine,p){
+ var map=MAP[machine],ml=(p.machineLines&&p.machineLines[machine])||[];
+ if(!map)return"";
+ var groups={},order=[];
+ (map.ssr||[]).forEach(function(cell){var m=cell.match(/\\d+$/),row=m?m[0]:"?";if(!groups[row]){groups[row]=0;order.push(row)}groups[row]++});
+ var r=p.machines[machine],actualSsr=Math.max(0,r.count-2),remaining=actualSsr,parts=[];
+ order.forEach(function(row,idx){var need=groups[row],got=Math.min(need,Math.max(0,remaining)),diff=got-need;remaining-=got;parts.push("SSR "+(idx+1)+"行目：必要 "+need+"個 / 読取 "+got+"個"+(diff<0?" → "+(-diff)+"個不足":diff>0?" → "+diff+"個超過":" → OK"))});
+ if(remaining>0)parts.push("SSR 余分："+remaining+"個");
+ var panelGot=Math.min(2,r.count);
+ return "<div style='margin-top:7px;padding:8px 10px;background:#f7f8fa;border-radius:8px'><b>雛形の個数内訳</b><br>盤内温度：必要 2個 / 読取 "+panelGot+"個"+(panelGot<2?" → "+(2-panelGot)+"個不足":" → OK")+"<br>"+parts.join("<br>")+"</div>"
+}
 function renderReview(p){
  var card=$("reviewCard"),rows=$("reviewRows");rows.innerHTML="";
  if((!p.issues||!p.issues.length)&&(!p.diagnostics||!p.diagnostics.length)&&(!p.corrections||!p.corrections.length)){card.hidden=true;return}
  card.hidden=false;
  (p.diagnostics||[]).forEach(function(d){
    var div=document.createElement("div");div.className="diagnosis";
-   div.innerHTML="<b>"+d.type+"："+d.reason+"</b><br>正常なら："+d.expected+"<br>今回："+d.actual;
+   div.innerHTML="<b>"+d.type+"："+d.reason+"</b><br>正常なら："+d.expected+"<br>今回："+d.actual+(MAP[d.type]?rowCapacitySummary(d.type,p):"");
    rows.appendChild(div)
  });
  (p.corrections||[]).forEach(function(x,i){
