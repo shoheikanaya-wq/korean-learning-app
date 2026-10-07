@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.4</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.5</span></p></div></header>
 
 
 
@@ -31,7 +31,7 @@
 
 <section class="card">
 
-<label class="file-button" style="position:relative;overflow:hidden">① Wordを選択<input id="docxInput" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>
+<input id="docxInput" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:block;width:100%;font-size:18px;padding:14px;border:2px solid #2f75b5;border-radius:14px;background:#fff">
 <div id="fileName" class="statusline">Word：未選択</div>
 <p class="small">例：20261001.docx / 25.10.30-1.docx。機台見出しごとにデータを分離し、構内温度・盤内温度・SSR値を確認します。不足・超過の機台は他機台から補完せずExcelへ反映しません。</p>
 </section>
@@ -97,7 +97,7 @@ function $(id){return document.getElementById(id)}
 document.addEventListener("DOMContentLoaded",function(){
  checkTemplate();
  $("templateInput").addEventListener("change",registerTemplate);
- $("docxInput").addEventListener("change",function(ev){var f=ev.target.files&&ev.target.files[0];$("fileName").textContent=f?"Word："+f.name:"Word：未選択";if(f)readWord(ev)});
+ $("docxInput").onchange=function(ev){var fs=ev.currentTarget&&ev.currentTarget.files;var f=fs&&fs.length?fs.item(0):null;$("fileName").textContent=f?"Word："+f.name:"Word：未選択";show(f?"Wordを受け取りました。読み取りを開始します…":"Wordが選択されていません。",!f);if(f)readWord({target:{files:[f]}})};
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
@@ -118,7 +118,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=240").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=250").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
