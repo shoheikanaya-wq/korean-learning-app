@@ -1,0 +1,32 @@
+name: Project boundary guard
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject non-language project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad=$(git ls-files | grep -Ei '(^|/)(ssr-onsoku|ssr|maintenance|mnt|robot|puratto|tokai-pan|aya)(/|$)|SSR温測|保全|産業用ロボット' || true)
+          # Existing historical SSR contamination is frozen, not counted as a new language artifact.
+          bad=$(printf '%s\n' "$bad" | grep -v '^ssr-onsoku/' || true)
+          if [ -n "$bad" ]; then
+            echo "Non-language project files detected:"
+            echo "$bad"
+            exit 1
+          fi
+          # Prevent any future changes inside the frozen historical contamination.
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            frozen=$(git diff --name-only HEAD^ HEAD -- ssr-onsoku/ || true)
+            if [ -n "$frozen" ]; then
+              echo "ssr-onsoku is frozen. Move SSR work to shoheikanaya-wq/ssr-temperature-app."
+              echo "$frozen"
+              exit 1
+            fi
+          fi
