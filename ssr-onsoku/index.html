@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.0</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v3.1</span></p></div></header>
 
 
 
@@ -120,7 +120,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=300").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=310").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -415,9 +415,9 @@ function colIndex(address){var m=String(address).match(/[A-Z]+/i),n=0,s=m?m[0].t
 function insertCellInOrder(inner,newCell,address,p){var target=colIndex(address),re=new RegExp("<"+escRe(p)+"c\\b[^>]*(?:\\/>|>[\\s\\S]*?<\\/"+escRe(p)+"c>)","g"),m;while((m=re.exec(inner))){var rm=m[0].match(/\br="([^"]+)"/);if(rm&&colIndex(rm[1])>target)return inner.slice(0,m.index)+newCell+inner.slice(m.index)}return inner+newCell}
 function insertRowInOrder(xml,newRow,row,p){var open="<"+p+"sheetData>",close="</"+p+"sheetData>",a=xml.indexOf(open),b=xml.indexOf(close);if(a<0||b<0)throw new Error("Excelシート構造が不正です");var bodyStart=a+open.length,body=xml.slice(bodyStart,b),re=new RegExp("<"+escRe(p)+"row\\b[^>]*\\br=\"(\\d+)\"[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"row>","g"),m;while((m=re.exec(body))){if(+m[1]>row)return xml.slice(0,bodyStart+m.index)+newRow+xml.slice(bodyStart+m.index)}return xml.slice(0,b)+newRow+xml.slice(b)}
 function setCell(xml,address,value,type){var p=prefix(xml,"worksheet"),row=+(address.match(/\d+/)||["0"])[0],rowRe=new RegExp("<"+escRe(p)+"row\\b([^>]*)\\br=\\\""+row+"\\\"([^>]*)>([\\s\\S]*?)<\\/"+escRe(p)+"row>"),rm=xml.match(rowRe);if(rm){var inner=rm[3],selfRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\\\""+escRe(address)+"\\\")[^>]*\\/>"),normRe=new RegExp("<"+escRe(p)+"c\\b(?=[^>]*\\br=\\\""+escRe(address)+"\\\")[^>]*>[\\s\\S]*?<\\/"+escRe(p)+"c>"),old=inner.match(selfRe)||inner.match(normRe),style=null;if(old){var sm=old[0].match(/\bs="([^"]+)"/);style=sm?sm[1]:null;inner=(value!==null&&value!==undefined&&value!=="")?inner.replace(old[0],cell(address,value,type,style,p)):inner.replace(old[0],emptyCellKeepingStyle(old[0],p))}else if(value!==null&&value!==undefined&&value!==""){inner=insertCellInOrder(inner,cell(address,value,type,null,p),address,p)}var replacement=rm[0].replace(rm[3],inner);return xml.replace(rowRe,replacement)}if(value===null||value===undefined||value==="")return xml;var newRow="<"+p+"row r=\""+row+"\">"+cell(address,value,type,null,p)+"</"+p+"row>";return insertRowInOrder(xml,newRow,row,p)}
-function emptyCellKeepingStyle(old,p){var m=old.match(new RegExp("^<"+escRe(p)+"c\\b([^>]*)"));if(!m)return old;var attrs=m[1].replace(/\s+t="[^"]*"/g,"").replace(/\/\s*$/,"");return"<"+p+"c"+attrs+"/>"} 
+function emptyCellKeepingStyle(old,p){var m=old.match(new RegExp("^<"+escRe(p)+"c\\b([^>]*)"));if(!m)return old;var attrs=m[1].replace(/\\s+t="[^"]*"/g,"");return "<"+p+"c"+attrs+"/>";}
 function cell(address,value,type,style,p){var s=style?" s=\""+style+"\"":"";if(type==="number")return"<"+p+"c r=\""+address+"\""+s+"><"+p+"v>"+Number(value)+"</"+p+"v></"+p+"c>";return"<"+p+"c r=\""+address+"\""+s+" t=\"inlineStr\"><"+p+"is><"+p+"t xml:space=\"preserve\">"+escXml(String(value))+"</"+p+"t></"+p+"is></"+p+"c>"}
-function escXml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
+function escXml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function escRe(s){return s.replace(/[.*+?^$(){}|[\]\\]/g,"\\$&")}
 function forceCalc(xml){var p=prefix(xml,"workbook"),re=new RegExp("<"+escRe(p)+"calcPr\\b[^>]*\\/>"),c="<"+p+"calcPr calcMode=\"auto\" fullCalcOnLoad=\"1\" forceFullCalc=\"1\"/>";return re.test(xml)?xml.replace(re,c):xml.replace("</"+p+"workbook>",c+"</"+p+"workbook>")}
 async function saveExcelFile(file){
