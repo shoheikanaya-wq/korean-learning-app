@@ -1,5 +1,5 @@
-const CACHE="ssr-onsoku-v200";
-const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg","./template/standard-v200.txt"];
+const CACHE="ssr-onsoku-v210";
+const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg","./template/standard-v200.txt","./vendor/jszip.min.js"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("ssr-onsoku-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener("fetch",e=>{
