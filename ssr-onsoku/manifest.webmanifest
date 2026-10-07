@@ -1,7 +1,7 @@
 {
   "name": "SSR温測 Word→Excel",
   "short_name": "SSR温測",
-  "description": "SSR温度測定Wordを確認し、Excel雛形へ出力（v1.5）",
+  "description": "SSR温度測定Wordを確認し、Excel雛形へ出力（v1.6）",
   "start_url": "./?v=330",
   "scope": "./",
   "display": "standalone",
