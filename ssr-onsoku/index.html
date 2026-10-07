@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.8</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v2.9</span></p></div></header>
 
 
 
@@ -120,7 +120,7 @@ installBtn.addEventListener("click",async function(){
 });
 refreshInstallUI();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=280").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=290").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1),done=false;var timer=setTimeout(function(){if(!done){done=true;reject(new Error("端末保存領域の応答待ち"))}},1200);q.onupgradeneeded=function(){if(!q.result.objectStoreNames.contains("files"))q.result.createObjectStore("files")};q.onsuccess=function(){if(done){try{q.result.close()}catch(e){}return}done=true;clearTimeout(timer);resolve(q.result)};q.onerror=function(){if(done)return;done=true;clearTimeout(timer);reject(q.error||new Error("端末保存領域を開けません"))};q.onblocked=function(){if(done)return;done=true;clearTimeout(timer);reject(new Error("端末保存領域がブロックされています"))}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
@@ -329,7 +329,7 @@ function renderReview(p){
  (p.corrections||[]).forEach(function(x,i){
    var div=document.createElement("div");div.className="candidate";
    var vals=x.values.map(function(v){return v.toFixed(1)}).join(" / ");
-   div.innerHTML="<b>"+x.machine+"　自動読取"+(x.suspicious?"・要確認":"")+"</b><br>元データ："+x.original+"<br>読取候補："+vals+(x.suspicious?"<br>⚠ 周囲と大きく違う可能性のある値を含みます。必要なら下欄を手入力で修正してください。":"<br>連続入力を小数1桁の測定値として分割しました。")+"<input data-candidate='"+i+"' data-line='"+x.lineIndex+"' value='"+x.raw.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")+"'>";
+   div.innerHTML="<b>"+x.machine+"　自動読取"+(x.suspicious?"・要確認":"")+"</b><br>元データ："+x.original+"<br>読取候補："+vals+(x.suspicious?"<br>⚠ 周囲と大きく違う可能性のある値を含みます。必要なら下欄を手入力で修正してください。":"<br>連続入力を小数1桁の測定値として分割しました。")+"</b><input data-candidate='"+i+"' data-line='"+x.lineIndex+"' value='"+x.raw.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")+"'>";
    rows.appendChild(div)
  });
  (p.issues||[]).forEach(function(issue,i){
