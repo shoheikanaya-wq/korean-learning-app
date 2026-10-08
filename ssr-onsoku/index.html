@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.32</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.33</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形（標準装備）</div>
@@ -77,6 +77,8 @@ var ORDER=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","F
 var EXPECTED={"MM18":46,"FM81":22,"FM84":30,"FM83-1":37,"FM83-2":14,"FM96":20,"FM97":20,"FM19":32,"FE04":24,"FE01":20,"FM07":34,"FM01":22,"FM22":32};
 var VORDER=["MM18","FE01","FE04","FM81","FM83-1","FM83-2","FM84","FM96","FM97","FM19","FM22","FM01","FM07"];
 var OPTIONAL={"MM18":true};
+/* Wordの改行は実機SSRの段替わり。入力者にスペースを要求せず、段落境界を保持して解析する。 */
+var ROW_COUNTS={"FM84":[6,14,8],"FM83-1":[18,17],"FM83-2":[6,6],"FM96":[6,6,6],"FM97":[7,7,4],"FM19":[6,6,6,6,6],"FE04":[11,11],"FE01":[10,8],"FM07":[12,12,8],"FM01":[7,7,6],"FM22":[12,9,9],"FM81":[7,7,6],"MM18":[2,14,14,14]};
 var MAP={
 "MM18":{"upper":"D2","lower":"F2","ssr":["B4","C4","B6","C6","D6","E6","F6","G6","H6","I6","J6","K6","L6","M6","N6","O6","B8","C8","D8","E8","F8","G8","H8","I8","J8","K8","L8","M8","N8","O8","B10","C10","D10","E10","F10","G10","H10","I10","J10","K10","L10","M10","N10","O10"]},
 "FE01":{"upper":"D12","lower":"F12","ssr":["B14","C14","D14","E14","F14","G14","H14","I14","J14","K14","B16","C16","F16","G16","H16","I16","J16","K16"]},
@@ -116,7 +118,7 @@ document.addEventListener("DOMContentLoaded",function(){
  if("serviceWorker" in navigator){
    var reloading=false;
    navigator.serviceWorker.addEventListener("controllerchange",function(){if(reloading)return;reloading=true;location.reload()});
-   navigator.serviceWorker.register("./service-worker.js?v=132",{updateViaCache:"none"}).then(function(r){
+   navigator.serviceWorker.register("./service-worker.js?v=133",{updateViaCache:"none"}).then(function(r){
      if(r.waiting)r.waiting.postMessage({type:"SKIP_WAITING"});
      r.addEventListener("updatefound",function(){var w=r.installing;if(!w)return;w.addEventListener("statechange",function(){if(w.state==="installed"&&navigator.serviceWorker.controller)w.postMessage({type:"SKIP_WAITING"})})});
      r.update().catch(function(){});
@@ -126,7 +128,7 @@ document.addEventListener("DOMContentLoaded",function(){
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
 async function loadCustomTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
-async function loadBuiltInTemplate(){var paths=["./template/approved-v330.txt?v=132","./template/standard-v200.txt?v=132"];var lastErr=null;for(var p=0;p<paths.length;p++){try{var r=await fetch(paths[p],{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);var s=(await r.text()).replace(/\s/g,"");if(!s||s.length%4!==0)throw new Error("雛形データ長が不正");var bin=atob(s),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);if(u8.length<10000||u8[0]!==80||u8[1]!==75)throw new Error("雛形データが不完全");return{buf:u8.buffer,name:"SSR温測テンプレ.xlsx（内蔵）",builtIn:true}}catch(e){lastErr=e}}throw new Error("標準雛形を読み込めません："+(lastErr?lastErr.message:"不明"))}
+async function loadBuiltInTemplate(){var paths=["./template/approved-v330.txt?v=133","./template/standard-v200.txt?v=133"];var lastErr=null;for(var p=0;p<paths.length;p++){try{var r=await fetch(paths[p],{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);var s=(await r.text()).replace(/\s/g,"");if(!s||s.length%4!==0)throw new Error("雛形データ長が不正");var bin=atob(s),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);if(u8.length<10000||u8[0]!==80||u8[1]!==75)throw new Error("雛形データが不完全");return{buf:u8.buffer,name:"SSR温測テンプレ.xlsx（内蔵）",builtIn:true}}catch(e){lastErr=e}}throw new Error("標準雛形を読み込めません："+(lastErr?lastErr.message:"不明"))}
 async function loadTemplate(){var custom=await loadCustomTemplate().catch(function(){return null});return custom&&custom.schemaVersion===330?custom:await loadBuiltInTemplate()}
 async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent="雛形："+t.name;$("templateStatus").className="statusline template-ok";updateExportState()}catch(e){templateReady=false;show("標準雛形を読み込めません："+(e.message||e),true)}}
 async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
@@ -145,7 +147,7 @@ lines.forEach(function(raw,lineIndex){
  if(mac){currentMachine=mac;panelLineSeen[mac]=false;machineLines[mac].push({lineIndex:lineIndex,raw:raw,kind:"machine"});var same=extractMeasurements(line,mac);same.values.forEach(function(v){machines[currentMachine].push(v)});if(same.invalid.length){formatErrors.push(mac+"："+same.invalid.join("、"));issues.push({machine:mac,lineIndex:lineIndex,raw:raw,tokens:same.invalid.slice()})}return}
  if(parseDateText(line)){currentMachine=null;return}
  if(!currentMachine)return;
- machineLines[currentMachine].push({lineIndex:lineIndex,raw:raw,kind:panelLineSeen[currentMachine]?"ssr":"panel"});
+ var rowKind=panelLineSeen[currentMachine]?"ssr":"panel",ssrRowIndex=machineLines[currentMachine].filter(function(x){return x.kind==="ssr"}).length; machineLines[currentMachine].push({lineIndex:lineIndex,raw:raw,kind:rowKind,rowIndex:rowKind==="ssr"?ssrRowIndex:null,expectedInRow:rowKind==="ssr"&&ROW_COUNTS[currentMachine]?ROW_COUNTS[currentMachine][ssrRowIndex]:null});
  var ex=extractMeasurements(line,null);
  var isPanelLine=!panelLineSeen[currentMachine];
  if(isPanelLine&&ex.values.length>=2)panelLineSeen[currentMachine]=true;
@@ -156,6 +158,8 @@ lines.forEach(function(raw,lineIndex){
  ex.values.forEach(function(v){machines[currentMachine].push(v)});
  if(ex.invalid.length){formatErrors.push(currentMachine+"："+ex.invalid.join("、"));issues.push({machine:currentMachine,lineIndex:lineIndex,raw:raw,tokens:ex.invalid.slice()})}
 });
+// Physical-row diagnostics: a Word paragraph corresponds to one real SSR row.
+ORDER.forEach(function(k){var rc=ROW_COUNTS[k]||[], rows=(machineLines[k]||[]).filter(function(x){return x.kind==="ssr"});rows.forEach(function(row,ri){if(!Number.isFinite(row.expectedInRow))return;var ex=extractMeasurements(row.raw,null),actual=ex.values.length;if(actual!==row.expectedInRow){formatErrors.push(k+" "+(ri+1)+"段目："+actual+"/"+row.expectedInRow+"個");issues.push({machine:k,lineIndex:row.lineIndex,raw:row.raw,tokens:[],rowIndex:ri,expectedInRow:row.expectedInRow,actualInRow:actual})}})});
 // Machine-level recovery: use the known total count before diagnostics.
 ORDER.forEach(function(k){
  var expected=EXPECTED[k];
