@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.24</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.25</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形（標準装備）</div>
@@ -98,12 +98,12 @@ document.addEventListener("DOMContentLoaded",function(){
  $("exportButton").addEventListener("click",exportExcel);$("recheckButton").addEventListener("click",recheckCorrections);
  $("horizontalTab").addEventListener("click",function(){switchDataView("horizontal")});
  $("verticalTab").addEventListener("click",function(){switchDataView("vertical")});
- if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=124").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
+ if("serviceWorker" in navigator){navigator.serviceWorker.register("./service-worker.js?v=125").then(function(r){r.update().catch(function(){})}).catch(function(){});navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update().catch(function(){})})}).catch(function(){})}
 });
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
 async function loadCustomTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
-async function loadBuiltInTemplate(){var paths=["./template/approved-v330.txt?v=124","./template/standard-v200.txt?v=124"];var lastErr=null;for(var p=0;p<paths.length;p++){try{var r=await fetch(paths[p],{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);var s=(await r.text()).replace(/\s/g,"");if(!s||s.length%4!==0)throw new Error("雛形データ長が不正");var bin=atob(s),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);if(u8.length<10000||u8[0]!==80||u8[1]!==75)throw new Error("雛形データが不完全");return{buf:u8.buffer,name:"SSR温測テンプレ.xlsx（内蔵）",builtIn:true}}catch(e){lastErr=e}}throw new Error("標準雛形を読み込めません："+(lastErr?lastErr.message:"不明"))}
+async function loadBuiltInTemplate(){var paths=["./template/approved-v330.txt?v=125","./template/standard-v200.txt?v=125"];var lastErr=null;for(var p=0;p<paths.length;p++){try{var r=await fetch(paths[p],{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);var s=(await r.text()).replace(/\s/g,"");if(!s||s.length%4!==0)throw new Error("雛形データ長が不正");var bin=atob(s),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);if(u8.length<10000||u8[0]!==80||u8[1]!==75)throw new Error("雛形データが不完全");return{buf:u8.buffer,name:"SSR温測テンプレ.xlsx（内蔵）",builtIn:true}}catch(e){lastErr=e}}throw new Error("標準雛形を読み込めません："+(lastErr?lastErr.message:"不明"))}
 async function loadTemplate(){var custom=await loadCustomTemplate().catch(function(){return null});return custom&&custom.schemaVersion===330?custom:await loadBuiltInTemplate()}
 async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent="雛形："+t.name;$("templateStatus").className="statusline template-ok";updateExportState()}catch(e){templateReady=false;show("標準雛形を読み込めません："+(e.message||e),true)}}
 async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
@@ -274,14 +274,14 @@ function renderReview(p){
      var r=p.machines[d.type],missing=Math.max(0,r.expected-r.count),pos=r.count+1,kind=pos<=2?("盤内温度"+(pos===1?"上":"下")):("SSR"+String(pos-2).padStart(2,"0"));
      var note=document.createElement("div");note.style.cssText="color:#b42318;font-weight:900;margin:4px 0 8px";
      note.textContent="→ "+kind+" 付近を確認（あと "+missing+" 個）";rows.appendChild(note);
-     (p.machineLines&&p.machineLines[d.type]?p.machineLines[d.type].filter(function(z){return z.kind!=="machine"}):[]).forEach(function(z){addEdit(z.lineIndex,d.type,z.raw)});
+     /* 不足判定だけでは正常行まで修正対象にしない。編集欄は実際に確定不能な行だけ下で追加する。 */
    }
  });
  (p.corrections||[]).forEach(function(x){
    var div=document.createElement("div");div.className="candidate";
    var vals=x.values.map(function(v){return v.toFixed(1)}).join(" / ");
    div.innerHTML="<b>"+esc(x.machine)+"　自動読取"+(x.suspicious?"・要確認":"")+"</b><br>元データ："+esc(x.original)+"<br>読取候補："+esc(vals)+(x.suspicious?"<br><span style='color:#b42318;font-weight:900'>→ 周囲と大きく違う値を確認</span>":"");
-   rows.appendChild(div);addEdit(x.lineIndex,x.machine,x.raw);
+   rows.appendChild(div);if(x.suspicious)addEdit(x.lineIndex,x.machine,x.raw);
  });
  (p.issues||[]).forEach(function(issue){
    var div=document.createElement("div");div.className="diagnosis";
