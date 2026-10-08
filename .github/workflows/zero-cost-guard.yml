@@ -1,0 +1,28 @@
+name: Zero-cost architecture guard
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify production stays Cloud-independent
+        shell: bash
+        run: |
+          set -euo pipefail
+          files="index.html progress-config.js sw.js manifest.webmanifest"
+          if grep -Ein 'run\.app|googleapis\.com|firebase|firestore|GCP_|GOOGLE_[A-Z_]*KEY|AIza[0-9A-Za-z_-]{20,}' $files; then
+            echo "Cloud/API dependency found in Korean production files"
+            exit 1
+          fi
+          grep -q "window.KOR_PROGRESS_API = ''" progress-config.js
+          echo "Korean zero-cost guard passed"
