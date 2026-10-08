@@ -15,7 +15,7 @@
 </head>
 <body>
 <main class="app">
-<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.27</span></p></div></header>
+<header class="hero"><div class="mark">SSR</div><div><h1>SSR温測</h1><p>Wordを選ぶ → 確認 → Excel保存　<span style="font-size:12px;color:#7a8691">v1.28</span></p></div></header>
 
 <section class="card">
 <div class="section-title">Excel雛形（標準装備）</div>
@@ -60,6 +60,7 @@
 <div style="font-weight:900;font-size:clamp(12px,3.4vw,17px);margin-bottom:9px;white-space:nowrap">このQRからSSRアプリをインストールできます。</div>
 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADpUlEQVR4nO2cX46bMBCHv19ByiNIe4A9irlBz7RH2hvAUXID/LgSaPpgG0zaqlK7UcJ25iEhJp+wpdH8tZHxdzJ9+0sQnHTSSSeddNJJJ5+PVJYWDVHSwComteQxyDckScODZ+vkc5Ft+gojQHwBuqW1qZ9NYe4FrIL4sgDNAoAeN1snn5HMOkTsIbxDVp9ruxixWRRGYOobjAjaFOls63TyfmR781vhKqD7kE3fP2TEl0Wf/EwnvxZ5q0M2vS6tEV9MdCC6BWAV4f2znunk1yKLDnUGRCDMmAARxjXdsxQPRagLkudap5N3JydJUg8aYgthbgzixQjXLS9jTWnZ42fr5FORyQ5V9mXqm3RhU49sel1I4dHRCp1tnU7ej8TMzAgz2AiYlSuCmRFsSWOEuTEbuyXdsPFc63TyfmTSoaRIJAUpSkNX7oydJfVJH+Y65GQlW162toT3tvJXv2roK1wvZfxc63TyfmSxQ8lRmSU3lm7MYGYL5AQfbKQxt0NOHqXyZWEG6MxK7GOWvRolRgI8HnLyRkrEU4KdEVJQVCKjprJNWcNch5yspfJlNjd2qzlhbrJZ2vM392VOHqToRlYfoNk8WGM20hwSfPPc3slb2bP3emwul8Gyk8uag9shJ39NhmtbRUHSaykXQWMQW+xNLdAtaHj0bJ18KnKvD8kmlf1DsOYmyKRmIdjaKtgqI27Audbp5N3JqW+K4YlSjqljtk0aAHvrAbbU7ZzrdPIOJKXNUepDuUtmRoqpu6W08UtQ5DG1k0c5lBeX0lpN5ei6SJQ1Z++hnWudTt6PPOT2MwdLU+Vq2Q7tRW3XISc3yb5s64Nl11asT5ZSY9wI1yEnj2TyW8QWDawq6rOKZIJYVTY4goYHz9bJ5ySjpKFbsDddUkFIKrlaSsSm/rOf6eTXIA89V7JFytl7lZJZ7npUxLnW6eT9yGO/zErjdeu05g0gOcsvuZrrkJOV7H37PJCUBm7G0oX37Z38LVkS9z0yYnrdDM8Me91Rw8Nn6+Tzkft7P1LjdepL+jX1jeV2a2qVrX6+zMmj/PzeDyAdT0z79K+CYKtyN61bWvvXZzr5tci617G1Odg2ou1Hy/Lf/XyZk38iUygU7COVF6UebOw+lHc0+tkgJ/9IhqvEpItJ/apcmI6XEkmD7/1w8kayLysJfrXZY9tjnYqPY/q/ny9z8lb2XirQVLtAclEx/Ty08T0ecrIW+TvOnXTSSSeddNLJ/5z8AXaPG7lsPsdUAAAAAElFTkSuQmCC" alt="SSR温測アプリ用QRコード" width="190" height="190" style="max-width:62vw;background:#fff;padding:8px;border:1px solid #d9e2e9;border-radius:14px">
 
+<div style="margin-top:12px"><button id="installAppButton" class="action primary" type="button">SSR温測をインストール</button><div id="installHelp" class="small" style="margin-top:8px">QRを読み込んで開いた端末で、このボタンを押してください。</div></div>
 </section>
 
 </main>
@@ -67,6 +68,10 @@
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 "use strict";
+var deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferredInstallPrompt=e;var h=document.getElementById("installHelp");if(h)h.textContent="インストールできます。下のボタンを押してください。"});
+window.addEventListener("appinstalled",function(){deferredInstallPrompt=null;var b=document.getElementById("installAppButton");if(b){b.disabled=true;b.textContent="インストール済み"}var h=document.getElementById("installHelp");if(h)h.textContent="SSR温測をインストールしました。"});
+
 var ORDER=["MM18","FM81","FM84","FM83-1","FM83-2","FM96","FM97","FM19","FE04","FE01","FM07","FM01","FM22"];
 var EXPECTED={"MM18":46,"FM81":22,"FM84":30,"FM83-1":37,"FM83-2":14,"FM96":20,"FM97":20,"FM19":32,"FE04":24,"FE01":20,"FM07":34,"FM01":22,"FM22":32};
 var VORDER=["MM18","FE01","FE04","FM81","FM83-1","FM83-2","FM84","FM96","FM97","FM19","FM22","FM01","FM07"];
@@ -92,6 +97,12 @@ var HEADERS={
 var current=null,templateReady=false;
 function $(id){return document.getElementById(id)}
 document.addEventListener("DOMContentLoaded",function(){
+ var installBtn=$("installAppButton");
+ if(installBtn)installBtn.addEventListener("click",async function(){
+  if(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches){installBtn.disabled=true;installBtn.textContent="インストール済み";$("installHelp").textContent="この端末にはインストール済みです。";return}
+  if(deferredInstallPrompt){deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice}catch(e){}deferredInstallPrompt=null;return}
+  $("installHelp").textContent="確認画面が出ない場合は、Chromeのメニューから「アプリをインストール」を選んでください。";
+ });
  checkTemplate();
  $("templateInput").addEventListener("change",registerTemplate);
  $("docxInput").addEventListener("change",readWord);
@@ -101,7 +112,7 @@ document.addEventListener("DOMContentLoaded",function(){
  if("serviceWorker" in navigator){
    var reloading=false;
    navigator.serviceWorker.addEventListener("controllerchange",function(){if(reloading)return;reloading=true;location.reload()});
-   navigator.serviceWorker.register("./service-worker.js?v=127",{updateViaCache:"none"}).then(function(r){
+   navigator.serviceWorker.register("./service-worker.js?v=128",{updateViaCache:"none"}).then(function(r){
      if(r.waiting)r.waiting.postMessage({type:"SKIP_WAITING"});
      r.addEventListener("updatefound",function(){var w=r.installing;if(!w)return;w.addEventListener("statechange",function(){if(w.state==="installed"&&navigator.serviceWorker.controller)w.postMessage({type:"SKIP_WAITING"})})});
      r.update().catch(function(){});
@@ -111,7 +122,7 @@ document.addEventListener("DOMContentLoaded",function(){
 function dbOpen(){return new Promise(function(resolve,reject){var q=indexedDB.open("ssr-onsoku-db",1);q.onupgradeneeded=function(){q.result.createObjectStore("files")};q.onsuccess=function(){resolve(q.result)};q.onerror=function(){reject(q.error)}})}
 async function saveTemplate(buf,name){var db=await dbOpen();await new Promise(function(resolve,reject){var tx=db.transaction("files","readwrite");tx.objectStore("files").put({buf:buf,name:name,updated:Date.now(),schemaVersion:330},"template");tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}});db.close()}
 async function loadCustomTemplate(){var db=await dbOpen();var v=await new Promise(function(resolve,reject){var tx=db.transaction("files","readonly");var q=tx.objectStore("files").get("template");q.onsuccess=function(){resolve(q.result||null)};q.onerror=function(){reject(q.error)}});db.close();return v}
-async function loadBuiltInTemplate(){var paths=["./template/approved-v330.txt?v=127","./template/standard-v200.txt?v=127"];var lastErr=null;for(var p=0;p<paths.length;p++){try{var r=await fetch(paths[p],{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);var s=(await r.text()).replace(/\s/g,"");if(!s||s.length%4!==0)throw new Error("雛形データ長が不正");var bin=atob(s),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);if(u8.length<10000||u8[0]!==80||u8[1]!==75)throw new Error("雛形データが不完全");return{buf:u8.buffer,name:"SSR温測テンプレ.xlsx（内蔵）",builtIn:true}}catch(e){lastErr=e}}throw new Error("標準雛形を読み込めません："+(lastErr?lastErr.message:"不明"))}
+async function loadBuiltInTemplate(){var paths=["./template/approved-v330.txt?v=128","./template/standard-v200.txt?v=128"];var lastErr=null;for(var p=0;p<paths.length;p++){try{var r=await fetch(paths[p],{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);var s=(await r.text()).replace(/\s/g,"");if(!s||s.length%4!==0)throw new Error("雛形データ長が不正");var bin=atob(s),u8=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u8[j]=bin.charCodeAt(j);if(u8.length<10000||u8[0]!==80||u8[1]!==75)throw new Error("雛形データが不完全");return{buf:u8.buffer,name:"SSR温測テンプレ.xlsx（内蔵）",builtIn:true}}catch(e){lastErr=e}}throw new Error("標準雛形を読み込めません："+(lastErr?lastErr.message:"不明"))}
 async function loadTemplate(){var custom=await loadCustomTemplate().catch(function(){return null});return custom&&custom.schemaVersion===330?custom:await loadBuiltInTemplate()}
 async function checkTemplate(){try{var t=await loadTemplate();templateReady=!!t;$("templateStatus").textContent="雛形："+t.name;$("templateStatus").className="statusline template-ok";updateExportState()}catch(e){templateReady=false;show("標準雛形を読み込めません："+(e.message||e),true)}}
 async function registerTemplate(ev){var f=ev.target.files&&ev.target.files[0];if(!f)return;if(!/\.xlsx$/i.test(f.name)){show("xlsx形式の雛形を選んでください。",true);return}try{show("雛形を確認中…");var buf=await f.arrayBuffer();var zip=await JSZip.loadAsync(buf);var wb=await zip.file("xl/workbook.xml").async("string");var rel=await zip.file("xl/_rels/workbook.xml.rels").async("string");resolveSheet(wb,rel,"リレー配置と測定温度記入シート");await saveTemplate(buf,f.name);templateReady=true;$("templateStatus").textContent="雛形：登録済み（"+f.name+"）";$("templateStatus").className="statusline template-ok";show("雛形を登録しました。次回からWordを選ぶだけです。");updateExportState()}catch(e){show("このExcelは雛形として使えません："+(e.message||e),true)}}
