@@ -1,13 +1,28 @@
 {
-  "name": "SSR温測 Word→Excel",
+  "name": "SSR温測",
   "short_name": "SSR温測",
-  "description": "SSR温度測定Wordを確認し、Excel雛形へ出力（v3.30）",
-  "start_url": "./?v=111",
+  "description": "SSR温測 Word→Excel",
+  "start_url": "./?v=130",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eef3f7",
   "theme_color": "#1f4e78",
   "icons": [
-    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./",
+  "display_override": [
+    "standalone"
   ]
 }
