@@ -127,4 +127,28 @@
   } else {
     init();
   }
+
+  // 発音の見える化(別ファイル)を読み込む。外したいときは、この4行を消す
+  var extra = document.createElement('script');
+  extra.src = './pronunciation-dashboard.js?v=1';
+  extra.async = true;
+  document.head.appendChild(extra);
+
+  // 聞き分けクイズ(別ファイル)を読み込む。外したいときは、この4行を消す
+  var quiz = document.createElement('script');
+  quiz.src = './listening-quiz.js?v=1';
+  quiz.async = true;
+  document.head.appendChild(quiz);
+
+  // 更新のお知らせ(別ファイル)を読み込む。外したいときは、この4行を消す
+  var upd = document.createElement('script');
+  upd.src = './update-banner.js?v=1';
+  upd.async = true;
+  document.head.appendChild(upd);
+
+  // くり返し練習(別ファイル)を読み込む。外したいときは、この4行を消す
+  var gap = document.createElement('script');
+  gap.src = './gap-repeat.js?v=1';
+  gap.async = true;
+  document.head.appendChild(gap);
 })();
