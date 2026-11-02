@@ -151,4 +151,10 @@
   gap.src = './gap-repeat.js?v=1';
   gap.async = true;
   document.head.appendChild(gap);
+
+  // 会話れんしゅう(別ファイル)を読み込む。外したいときは、この4行を消す
+  var role = document.createElement('script');
+  role.src = './conversation-roleplay.js?v=1';
+  role.async = true;
+  document.head.appendChild(role);
 })();
