@@ -45,13 +45,13 @@
       for (i = 0; i < els.length; i++) {
         if (els[i].children.length === 0) {
           t = (els[i].textContent || '').trim();
-          if (/^Ver\.?\s*\d/.test(t) && els[i].id !== 'korVerFallback') { els[i].textContent = label; return true; }
+          if (/^Ver\.?\s*\d/.test(t) && els[i].id !== 'korVerFallback') { if (t !== label) els[i].textContent = label; return true; }
         }
       }
       return false;
     }
     sync();
-    try { new MutationObserver(function () { sync(); }).observe(document.body, {childList:true, subtree:true, characterData:true}); } catch (e) {}
+    try { var mo = new MutationObserver(function () { if (sync()) mo.disconnect(); }); mo.observe(document.body, {childList:true, subtree:true}); setTimeout(function () { mo.disconnect(); }, 5000); } catch (e) {}
     var n = 0, timer = setInterval(function () {
       n++;
       if (sync() || n > 10) {
