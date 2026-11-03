@@ -50,6 +50,8 @@
       }
       return false;
     }
+    sync();
+    try { new MutationObserver(function () { sync(); }).observe(document.body, {childList:true, subtree:true, characterData:true}); } catch (e) {}
     var n = 0, timer = setInterval(function () {
       n++;
       if (sync() || n > 10) {
