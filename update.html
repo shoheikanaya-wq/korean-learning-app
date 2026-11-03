@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>韓国語アプリ 更新</title>
+<style>
+html,body{margin:0;height:100%;background:#f3efe6;color:#211d19;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
+.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+h1{font-size:26px;margin:0 0 12px}
+p{font-size:20px;line-height:1.6;margin:6px 0;font-weight:700}
+.big{display:block;margin-top:18px;min-height:60px;padding:0 28px;line-height:60px;border-radius:16px;background:#2f6f4f;color:#fff;font-size:22px;font-weight:900;text-decoration:none}
+.sp{width:46px;height:46px;border:6px solid #d8d1c7;border-top-color:#2f6f4f;border-radius:50%;animation:r 1s linear infinite;margin:10px auto}
+@keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>韓国語アプリを更新しています</h1>
+  <div class="sp" id="sp"></div>
+  <p id="msg">少しお待ちください…</p>
+  <a class="big" id="go" href="./?source=pwa" style="display:none">アプリを開く</a>
+</div>
+<script>
+/* 更新用ページ:QRや案内のリンクから開くと、古い保存分を消して最新の画面を取り直し、アプリへ移動します。
+   学習の記録(この端末の中の保存データ)は消しません。 */
+(function(){
+  var msg=document.getElementById('msg'),go=document.getElementById('go'),sp=document.getElementById('sp');
+  function finish(ok){
+    sp.style.display='none';
+    msg.textContent=ok?'更新できました。アプリを開きます。':'自動で開けなかったときは、下のボタンを押してください。';
+    go.style.display='block';
+    if(ok)setTimeout(function(){location.replace('./?source=pwa&u='+Date.now())},700);
+  }
+  var steps=[];
+  try{
+    if(window.caches&&caches.keys)steps.push(caches.keys().then(function(k){return Promise.all(k.map(function(n){return caches.delete(n)}))}));
+    if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)steps.push(navigator.serviceWorker.getRegistrations().then(function(r){return Promise.all(r.map(function(x){return x.unregister()}))}));
+  }catch(e){}
+  var t=setTimeout(function(){finish(true)},4000);   // 途中で止まっても、4秒後には先へ進む
+  Promise.all(steps).then(function(){clearTimeout(t);finish(true)},function(){clearTimeout(t);finish(false)});
+})();
+</script>
+</body>
+</html>
