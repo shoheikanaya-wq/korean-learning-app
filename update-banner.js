@@ -6,7 +6,7 @@
  */
 (function () {
   'use strict';
-  var APP_VERSION = '4.2.0';   // 画面に出る版番号。更新のたびに、ここだけ書き換える
+  var APP_VERSION = '4.2.1';   // 画面に出る版番号。更新のたびに、ここだけ書き換える
   var KEY = 'korAppSig';
   var bar = null;
 
